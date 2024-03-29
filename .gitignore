@@ -4,5 +4,6 @@ temp_db.json
 .env
 .eslintcache
 .terraform*
+terraform.tfstate*
 *.tfstate
 .venv

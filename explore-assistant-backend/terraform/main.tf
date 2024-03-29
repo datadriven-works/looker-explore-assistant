@@ -14,6 +14,7 @@ module "project-services" {
     "cloudresourcemanager.googleapis.com", 
     "cloudapis.googleapis.com",
     "cloudbuild.googleapis.com",
+    "cloudfunctions.googleapis.com",
     "run.googleapis.com",
     "iam.googleapis.com",
     "serviceusage.googleapis.com",
@@ -26,11 +27,11 @@ module "project-services" {
 
 resource "time_sleep" "wait_after_apis_activate" {
   depends_on      = [module.project-services]
-  create_duration = "300s"
+  create_duration = "120s"
 }
 
 module "cloud_run_backend" {
-  count = var.backend_type != "cloud_run" ? 1 : 0
+  count = var.use_cloud_function_backend ? 1 : 0
   source = "./cloud_function"
   project_id = var.project_id
   deployment_region = var.deployment_region
@@ -40,7 +41,7 @@ module "cloud_run_backend" {
 }
 
 module "bigquery_backend" {
-  count = var.backend_type != "backend" ? 1 : 0
+  count = var.use_bigquery_backend ? 1 : 0
   source = "./bigquery"
   project_id = var.project_id
   deployment_region = var.deployment_region

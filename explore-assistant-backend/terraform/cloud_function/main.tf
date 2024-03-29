@@ -56,7 +56,7 @@ resource "google_storage_bucket" "default" {
 data "archive_file" "default" {
   type        = "zip"
   output_path = "/tmp/function-source.zip"
-  source_dir  = "../explore-assistant-cloud-function/"
+  source_dir  = "../../explore-assistant-cloud-function/"
 }
 
 resource "google_storage_bucket_object" "object" {
@@ -125,9 +125,9 @@ resource "google_cloud_run_service_iam_policy" "noauth" {
 }
 
 output "function_uri" {
-  value = values(google_cloudfunctions2_function.default).*.url
+  value = google_cloudfunctions2_function.default.url
 }
 
 output "data" {
-  value = values(google_cloudfunctions2_function.default)
+  value = google_cloudfunctions2_function.default
 } 

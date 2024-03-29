@@ -8,9 +8,14 @@ variable "project_id" {
   description = "GCP Project ID"
 }
 
-variable "backend_type" {
-  type = string
-  description = "values: cloud_run, bigquery"
+variable "use_cloud_function_backend" {
+  type = bool
+  default = false
+}
+
+variable "use_bigquery_backend" {
+  type = bool
+  default = false
 }
 
 #
