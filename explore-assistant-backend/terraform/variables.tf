@@ -1,23 +1,29 @@
+
+#
+# REQUIRED VARIABLES
+#
+
 variable "project_id" {
   type = string
-  default = "YOUR GCP PROJECT"
+  description = "GCP Project ID"
 }
+
+variable "backend_type" {
+  type = string
+  description = "values: cloud_run, bigquery"
+}
+
+#
+# VARIABLES WITH DEFAULTS
+#
 
 variable "deployment_region" {
   type = string
-  default = "GCP DEPLOYMENT REGION"
-}
-
-variable "docker_image" {
-    type = string
-    default = ""
+  description = "Region to deploy the Cloud Run service. Example: us-central1"
+  default = "us-central1"
 }
 
 variable "cloud_run_service_name" {
     type = string
     default = "explore-assistant-api"
-}
-
-variable "backend_type" {
-  type = string
 }

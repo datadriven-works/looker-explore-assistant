@@ -34,7 +34,6 @@ module "cloud_run_backend" {
   source = "./cloud_function"
   project_id = var.project_id
   deployment_region = var.deployment_region
-  docker_image = var.docker_image
   cloud_run_service_name = var.cloud_run_service_name
 
   depends_on = [ time_sleep.wait_after_apis_activate ]
