@@ -41,7 +41,7 @@ interface GenerateTextFeedback extends GenerateText {
     feedback?: string
 }
 
-const generateText = (request: GenerateTextRequest) => {
+export const generateText = (request: GenerateTextRequest) => {
     return `
           DECLARE context STRING;
           SET context = """Youre a developer who would transalate questions to a structured URL query based on the following dictionary - choose only the fileds in the below description
@@ -66,18 +66,17 @@ const generateText = (request: GenerateTextRequest) => {
     `
 }
 
-const insertResponse = (request: GenerateTextFeedback) => {
+export const insertResponse = (request: GenerateTextFeedback) => {
     return `
         INSERT INTO explore_assistant.explore_assistant_responses (explore_id,input,output,accurate,feedback)
         VALUES ('${request.model}:${request.explore}','${request.input}','${request.response}',,)
     `
 }
 
-const insertResponseFeedback = (request: GenerateTextFeedback) => {
+export const insertResponseFeedback = (request: GenerateTextFeedback) => {
     return `
         UPDATE explore_assistant.explore_assistant_responses SET accurate = ${request.accurate} AND feedback = '${request.feedback}'
         WHERE explore_id = '${request.model}:${request.explore}'
     `
 }
 
-export {generateText, insertResponse, insertResponseFeedback};

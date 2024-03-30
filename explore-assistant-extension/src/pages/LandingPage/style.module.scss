@@ -1,0 +1,14 @@
+.title {
+    font-size: var(--title-font-size);
+    font-weight: bolder;
+    /* line-height: 4vh; */
+    margin-bottom: 1rem;
+}
+
+.subTitle {
+    font-size: var(--subtitle-font-size);
+    color: var(--accent-color-primary);
+    font-weight: bolder;
+    line-height: 2vh;
+    margin-bottom: 1rem;
+}

@@ -28,7 +28,6 @@ import React, { useContext, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { LookerEmbedSDK } from '@looker/embed-sdk'
 import { ExtensionContext } from '@looker/extension-sdk-react'
-import { BardLogo } from './App'
 const LOOKER_EXPLORE_ID = `${process.env.LOOKER_MODEL}/${process.env.LOOKER_EXPLORE}` || ''
 
 export interface ExploreEmbedProps {

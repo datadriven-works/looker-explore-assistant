@@ -27,20 +27,21 @@ SOFTWARE.
 import React, { useContext, useEffect } from 'react'
 import { hot } from 'react-hot-loader/root'
 import {
-  Button,
   Page,
   SpaceVertical,
   FieldTextArea,
   Tabs2,
   Tab2,
-  Select,
 } from '@looker/components'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 import type { ChangeEvent } from 'react'
-import { ExploreEmbed } from './ExploreEmbed'
+import { ExploreEmbed } from './components/ExploreEmbed'
 import styles from './styles.module.css'
+
 // import { initDB, addData, getStoreData, updateData, getData } from './db'
 import examples from '../examples.json'
+import LandingPage from './pages/LandingPage'
+import BardLogo from './components/BardLogo'
 
 const VERTEX_AI_ENDPOINT = process.env.VERTEX_AI_ENDPOINT || ''
 const LOOKER_MODEL = process.env.LOOKER_MODEL || ''
@@ -406,170 +407,4 @@ const ExploreAssistant = () => {
   )
 }
 
-const LandingPage = ({ begin }: { begin: boolean }) => {
-  const docs = [
-    {
-      title: 'No Code Prompt Tuning',
-      model: 'Vertex AI Generative AI Studio',
-      description:
-        'No code prompt tuning of foundational model with generated Python code for engineer hand off.',
-      doc: 'https://cloud.google.com/vertex-ai/docs/generative-ai/learn/generative-ai-studio',
-    },
-    {
-      title: 'Generate Text',
-      model: 'gemini-pro',
-      description:
-        'Multi-modal Model by Google. Used to generate the Explore query URL. This is done based off a minimal set of question answer examples that are fed into the prompt context.',
-      doc: 'https://developers.generativeai.google/tutorials/text_quickstart',
-    },
-  ]
-
-  return (
-    <SpaceVertical>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          alignContent: 'center',
-          width: '100%',
-          height: '100%',
-          padding: '2rem',
-          paddingTop: '10rem',
-          zIndex: 1,
-        }}
-      >
-        <div
-          style={{
-            width: '40vw',
-          }}
-        >
-          <span
-           className={styles.title}
-           >
-            Explore Assistant Demo
-          </span>
-          <span className={styles.subTitle}>
-            Powered by Generative AI with Google
-          </span>
-          <button className={styles.customButton} style={{ backgroundColor: 'rgb(26,115,232)' }} onClick={() => begin(true)}>Begin</button>
-          {docs.map((doc, index) => {
-            return (
-              <a
-                href={doc.doc}
-                target="_blank"
-                rel="noreferrer"
-                key={index}
-              >
-                <div
-                  style={{
-                    cursor: 'pointer',
-                    width: '90%',
-                    height: '18vh',
-                    backgroundColor: 'white',
-                    marginTop: '2rem',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '20%',
-                      height: 'auto',
-                      borderRight: '1px solid #ccc',
-                    }}
-                  >
-                    <img
-                      height="70%"
-                      width="auto"
-                      src={'https://lh3.googleusercontent.com/-1brN-k2sapOWO4gfdJKGEH8kZbfFjrzEMjNs1dl4u64PBH-yxVmB5vG2aHDatRudSByL3lwViUg1w'}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      paddingTop: '1rem',
-                      paddingLeft: '1rem',
-                      width: '80%',
-                      height: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <span className={styles.heading}>
-                      {doc.title}
-                    </span>
-                    <span className={styles.subHeading}>
-                      {doc.model}
-                    </span>
-                    <p
-                      style={{
-                        fontSize: '0.8rem',
-                        width: 'auto',
-                        height: 'auto',
-                        color: 'black',
-                        opacity: 0.8,
-                      }}
-                    >
-                      {doc.description}
-                    </p>
-                  </div>
-                </div>
-              </a>
-            )
-          })}
-        </div>
-      </div>
-    </SpaceVertical>
-  )
-}
-
-export interface BardLogoProps {
-  search?: boolean | undefined
-}
-
-const BardLogo = ({ search }: BardLogoProps) => {
-  const SVG = () => (
-    <svg width={'30%'} height={'30%'} viewBox="0 -900 900 900" >
-      <path fill="url(#b)" className={styles.bard} d="M700-480q0-92-64-156t-156-64q92 0 156-64t64-156q0 92 64 156t156 64q-92 0-156 64t-64 156ZM80-80v-720q0-33 23.5-56.5T160-880h400v80H160v525l46-45h594v-241h80v241q0 33-23.5 56.5T800-240H240L80-80Zm160-320v-80h400v80H240Zm0-120v-80h360v80H240Zm0-120v-80h200v80H240Z"/>
-      <linearGradient id='b' gradientUnits='objectBoundingBox' x1='0' y1='1' x2='1' y2='1'>
-         <stop offset='0' stopColor='#1A73E8'>
-            <animate attributeName="stopColor"
-               values="blue;cyan;peach;yellow;orange;blue" dur="20s" repeatCount="indefinite">
-            </animate>
-         </stop>
-         <stop offset='1' stopColor='#FFDDB7' stopOpacity="0">
-            <animate attributeName="stopColor"
-               values="peach;orange;red;purple;cyan;blue;green;peach" dur="20s" repeatCount="indefinite">
-            </animate>
-         </stop>
-         <animateTransform attributeName="gradientTransform" type="rotate" values="360 .5 .5;0 .5 .5"
-            dur="10s" repeatCount="indefinite" />
-      </linearGradient>
-    </svg>
-  )
-  return (
-    <>
-      {search ? (
-        <div
-          style={{
-            zIndex: 1,
-            height: '100%',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'row',
-          }}
-        >
-          <h3 style={{ color: 'rgb(26, 115, 232)' }}>Matching</h3>
-          {SVG()}
-        </div>
-      ) : (
-        <>{SVG()}</>
-      )}
-    </>
-  )
-}
-
 export const App = hot(ExploreAssistant)
-export { BardLogo }

@@ -66,8 +66,8 @@ module.exports = {
         sideEffects: false,
       },
       {
-        test: /\.css$/i,
-        use: ["style-loader", "css-loader"],
+        test: /\.(css|scss|sass)$/i,
+        use: ["style-loader", "css-loader", "sass-loader"],
       },
       {
         test: /\.(png|jpe?g|gif)$/i,

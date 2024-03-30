@@ -34,16 +34,6 @@ SOFTWARE.
     --accent-color-secondary: rgba(47, 135, 249, 0.338);
 }
 
-.bard {
-    animation: pulse 3s infinite;
-    -webkit-animation: pulse 3s infinite;
-}
-
-.bard2 {
-    animation: pulse2 3s infinite;
-    -webkit-animation: pulse2 3s infinite;
-}
-
 span {
     font-family: sans-serif;
     /* letter-spacing: 0.2rem; */
