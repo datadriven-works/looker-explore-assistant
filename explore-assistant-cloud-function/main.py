@@ -30,6 +30,9 @@ import vertexai
 from vertexai.preview.generative_models import GenerativeModel, GenerationConfig
 import logging
 
+logging.basicConfig(level=logging.INFO)
+
+
 # Initialize the Vertex AI
 project = os.environ.get("PROJECT")
 location = os.environ.get("REGION")
@@ -140,6 +143,5 @@ if __name__ == "__main__":
         # The Cloud Function entry point is defined by the decorator, so nothing is needed here
         pass
     else:
-        logging.basicConfig(level=logging.INFO)
         app = create_flask_app()
         app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
