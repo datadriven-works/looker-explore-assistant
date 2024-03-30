@@ -29,6 +29,8 @@ import ReactDOM from 'react-dom'
 import { ExtensionProvider } from '@looker/extension-sdk-react'
 import { ComponentsProvider, Spinner, Flex } from '@looker/components'
 import { App } from './App'
+import { store } from './store'
+import { Provider } from 'react-redux'
 
 const getRoot = () => {
   const id = 'extension-root'
@@ -62,10 +64,12 @@ const render = (Component: typeof App) => {
         loadingComponent={loading}
         requiredLookerVersion=">=21.0"
       >
-        <Component />
+        <Provider store={store}>
+          <Component />
+        </Provider>
       </ExtensionProvider>
     </ComponentsProvider>,
-    root
+    root,
   )
 }
 
