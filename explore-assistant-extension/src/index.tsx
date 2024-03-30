@@ -27,7 +27,7 @@ SOFTWARE.
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { ExtensionProvider } from '@looker/extension-sdk-react'
-import { ComponentsProvider, Spinner, Flex } from '@looker/components'
+import { ComponentsProvider, Spinner, Space } from '@looker/components'
 import { App } from './App'
 import { store } from './store'
 import { Provider } from 'react-redux'
@@ -48,9 +48,9 @@ const getRoot = () => {
 const render = (Component: typeof App) => {
   const root = getRoot()
   const loading = (
-    <Flex width="100%" height="90%" alignItems="center" justifyContent="center">
+    <Space>
       <Spinner color="black" />
-    </Flex>
+    </Space>
   )
 
   ReactDOM.render(

@@ -1,23 +1,58 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
+interface HistoryItem {
+  message: string
+  url: string
+}
+
+interface Field {
+  name: string
+  type: string
+  description: string
+  tags: string[]
+}
+
 interface AssistantState {
   isQuerying: boolean
+  history: HistoryItem[]
+  dimensions: Field[]
+  measures: Field[]
+  exploreUrl: string
 }
 
 const initialState: AssistantState = {
-    isQuerying: false,
+  isQuerying: false,
+  history: [],
+  dimensions: [],
+  measures: [],
+  exploreUrl: '',
 }
 
 export const assistantSlice = createSlice({
-  name: 'counter',
+  name: 'assistant',
   initialState,
   reducers: {
     setIsQuerying: (state, action: PayloadAction<boolean>) => {
       state.isQuerying = action.payload
-    }
+    },
+    addToHistory: (state, action: PayloadAction<HistoryItem>) => {
+      state.history.push(action.payload)
+    },
+    setHistory: (state, action: PayloadAction<HistoryItem[]>) => {
+        state.history = action.payload
+    },
+    setDimensions: (state, action: PayloadAction<Field[]>) => {
+      state.dimensions = action.payload
+    },
+    setMeasures: (state, action: PayloadAction<Field[]>) => {
+      state.measures = action.payload
+    },
+    setExploreUrl: (state, action: PayloadAction<string>) => {
+      state.exploreUrl = action.payload
+    },
   },
 })
 
-export const { setIsQuerying } = assistantSlice.actions
+export const { setIsQuerying, addToHistory, setHistory, setDimensions, setMeasures, setExploreUrl } = assistantSlice.actions
 
 export default assistantSlice.reducer
