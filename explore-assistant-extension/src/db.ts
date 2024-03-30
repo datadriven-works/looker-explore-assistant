@@ -46,7 +46,6 @@ export const initDB = () => {
     request = indexedDB.open('myDB', 1)
 
     request.onupgradeneeded = (e) => {
-      console.log('here')
       db = e.target?.result
 
       // if the data object store doesn't exist, create it

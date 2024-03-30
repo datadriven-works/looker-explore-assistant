@@ -67,7 +67,6 @@ export const ExploreEmbed = ({
   }
 
   const animateExploreLoad = () => {
-    console.log("Here")
     setSubmit(false)
     document.getElementById('embedcontainer')?.style.setProperty('opacity', '1')
   }

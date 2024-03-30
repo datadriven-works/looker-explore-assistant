@@ -24,75 +24,60 @@
 import os
 import json
 from flask import Flask, request
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 import functions_framework
 import vertexai
-from urllib.parse import urlparse, parse_qs
+from vertexai.preview.generative_models import GenerativeModel, GenerationConfig
+import logging
 
 # Initialize the Vertex AI
 project = os.environ.get("PROJECT")
 location = os.environ.get("REGION")
 vertexai.init(project=project, location=location)
 
-def generate_looker_query(request_json, explore_file):
 
-    parameters = {
+def generate_looker_query(contents, parameters=None, model_name="gemini-pro"):
+
+   # Define default parameters
+    default_parameters = {
         "temperature": 0.2,
-        "max_output_tokens": 100,### Reduce token to avoid having multiples results on the same request
+        "max_output_tokens": 500,
         "top_p": 0.8,
         "top_k": 40
     }
 
-    context = """You\'re a developer who would transalate questions to a structured URL query based on the following json of fields - choose only the fields in the below description using the field "name" in the url. Make sure a limit of 500 or less is always applied.: \n
-    """
+    # Override default parameters with any provided in the request
+    if parameters:
+        default_parameters.update(parameters)
 
-    # read examples jsonl file from local filesystem
-    # in a production use case, reading from cloud storage would be recommended
-    examples = """\n The examples here showcase how the url should be constructed. Only use the "dimensions" and "measures" above for fields, filters and sorts: \n"""
+    # instantiate gemini model for prediction
+    model = GenerativeModel(model_name)
 
-    with open("./examples.jsonl", "r") as f:
-        lines = f.readlines()
-
-        for line in lines:
-            examples += (f"input: {json.loads(line)['input']} \n" + f"output: {json.loads(line)['output']} \n") 
-
-
-
-    if request_json and 'question' in request_json:
-        llm = """
-            input: {}
-            output: """.format(request_json['question']) ### Formating our input to the model
-        predict = context + request_json['explore'] + examples + llm
-
-        # instantiate gemini model for prediction
-        from vertexai.preview.generative_models import GenerativeModel, GenerationConfig
-        model = GenerativeModel("gemini-pro")
-
-        # make prediction to generate Looker Explore URL
-        response =  model.generate_content(
-            contents=predict,
-            generation_config=GenerationConfig(
-                temperature=0.2,
-                top_p=0.8,
-                top_k=40,
-                max_output_tokens=100,
-                candidate_count=1
-            )
+    # make prediction to generate Looker Explore URL
+    response = model.generate_content(
+        contents=contents,
+        generation_config=GenerationConfig(
+            temperature=default_parameters["temperature"],
+            top_p=default_parameters["top_p"],
+            top_k=default_parameters["top_k"],
+            max_output_tokens=default_parameters["max_output_tokens"],
+            candidate_count=1
         )
+    )
 
-        # grab token character count metadata and log
-        metadata = response.__dict__['_raw_response'].usage_metadata
+    # grab token character count metadata and log
+    metadata = response.__dict__['_raw_response'].usage_metadata
 
-        # Complete a structured log entry.
-        entry = dict(
-            severity="INFO",
-            message={"request": request_json['question'],"response": response.text, "input_characters": metadata.prompt_token_count, "output_characters": metadata.candidates_token_count},
-            # Log viewer accesses 'component' as jsonPayload.component'.
-            component="explore-assistant-metadata",
-        )
-
-        print(json.dumps(entry))
-        
+    # Complete a structured log entry.
+    entry = dict(
+        severity="INFO",
+        message={"request": contents, "response": response.text,
+                 "input_characters": metadata.prompt_token_count, "output_characters": metadata.candidates_token_count},
+        # Log viewer accesses 'component' as jsonPayload.component'.
+        component="explore-assistant-metadata",
+    )
+    logging.info(entry)
+    return response.text
 
 
 # Flask app for running as a web server
@@ -104,10 +89,14 @@ def create_flask_app():
     def base():
         if request.method == "OPTIONS":
             return handle_options_request()
-        
+
         incoming_request = request.get_json()
-        explore_file = f"./{incoming_request['model']}::{incoming_request['explore']}.jsonl"
-        response_text = generate_looker_query(incoming_request, explore_file)
+        contents = incoming_request.get("contents")
+        parameters = incoming_request.get("parameters")
+        if contents is None:
+            return "Missing 'contents' parameter", 400
+        
+        response_text = generate_looker_query(contents, parameters)
         
         # Set CORS headers for the actual request
         headers = {"Access-Control-Allow-Origin": "*"}
@@ -122,13 +111,18 @@ def cloud_function_entrypoint(request):
     if request.method == "OPTIONS":
         return handle_options_request()
 
-    request_json = request.get_json(silent=True)
-    explore_file = "./examples.jsonl"
-    response_text = generate_looker_query(request_json, explore_file)
+    incoming_request = request.get_json()
+    contents = incoming_request.get("contents")
+    parameters = incoming_request.get("parameters")
+    if contents is None:
+        return "Missing 'contents' parameter", 400
+        
+    response_text = generate_looker_query(contents, parameters)
 
     # Set CORS headers for the actual request
     headers = {"Access-Control-Allow-Origin": "*"}
     return response_text, 200, headers
+
 
 def handle_options_request():
     headers = {
@@ -139,7 +133,6 @@ def handle_options_request():
     }
     return "", 204, headers
 
-
 # Determine the running environment and execute accordingly
 if __name__ == "__main__":
     # Detect if running in a Google Cloud Function environment
@@ -147,5 +140,6 @@ if __name__ == "__main__":
         # The Cloud Function entry point is defined by the decorator, so nothing is needed here
         pass
     else:
+        logging.basicConfig(level=logging.INFO)
         app = create_flask_app()
         app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

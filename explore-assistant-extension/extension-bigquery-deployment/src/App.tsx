@@ -504,13 +504,13 @@ const GenerativeLogo = ({ search }: GenerativeLogoProps) => {
     <svg width={'30%'} height={'30%'} viewBox="0 -900 900 900" >
       <path fill="url(#b)" className={styles.bard} d="M700-480q0-92-64-156t-156-64q92 0 156-64t64-156q0 92 64 156t156 64q-92 0-156 64t-64 156ZM80-80v-720q0-33 23.5-56.5T160-880h400v80H160v525l46-45h594v-241h80v241q0 33-23.5 56.5T800-240H240L80-80Zm160-320v-80h400v80H240Zm0-120v-80h360v80H240Zm0-120v-80h200v80H240Z"/>
       <linearGradient id='b' gradientUnits='objectBoundingBox' x1='0' y1='1' x2='1' y2='1'>
-         <stop offset='0' stop-color='#1A73E8'>
-            <animate attributeName="stop-color"
+         <stop offset='0' stopColor='#1A73E8'>
+            <animate attributeName="stopColor"
                values="blue;cyan;peach;yellow;orange;blue" dur="20s" repeatCount="indefinite">
             </animate>
          </stop>
-         <stop offset='1' stop-color='#FFDDB7' stop-opacity="0">
-            <animate attributeName="stop-color"
+         <stop offset='1' stopColor='#FFDDB7' stopOpacity="0">
+            <animate attributeName="stopColor"
                values="peach;orange;red;purple;cyan;blue;green;peach" dur="20s" repeatCount="indefinite">
             </animate>
          </stop>

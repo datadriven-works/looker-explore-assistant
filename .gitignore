@@ -7,3 +7,4 @@ temp_db.json
 terraform.tfstate*
 *.tfstate
 .venv
+node_modules

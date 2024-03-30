@@ -40,6 +40,7 @@ import type { ChangeEvent } from 'react'
 import { ExploreEmbed } from './ExploreEmbed'
 import styles from './styles.module.css'
 // import { initDB, addData, getStoreData, updateData, getData } from './db'
+import examples from '../examples.json'
 
 const VERTEX_AI_ENDPOINT = process.env.VERTEX_AI_ENDPOINT || ''
 const LOOKER_MODEL = process.env.LOOKER_MODEL || ''
@@ -131,6 +132,34 @@ const ExploreAssistant = () => {
    */
   const fetchData = async (prompt: string | undefined, fields?: any): Promise<void> => {
     const question = prompt !== undefined ? prompt : query
+    
+    const contents = `
+    Context
+    ----------
+
+    Youre a developer who would transalate questions to a structured URL query based on the following dictionary - choose only the fileds in the below description user_order_facts is an extension of user and should be used when referring to users or customers.Generate only one answer, no more.
+
+    LookML Metadata
+    ----------
+
+    Dimensions Used to group by information (follow the instructions in tags when using a specific field; if map used include a location or lat long dimension;):
+        ${fields.dimensions.join(';')}
+      
+    Measures are used to perform calculations (if top, bottom, total, sum, etc. are used include a measure):
+        ${fields.measures.join(';')}
+
+    Example
+    ----------
+    ${examples.map((item) => `input: ${item['input']} ; output: ${item['output']}` ).join('\n')}
+
+    Input
+    ----------
+    ${question}
+
+    Output
+    ----------
+
+      `
 
     const responseData = await fetch(VERTEX_AI_ENDPOINT, {
       method: 'POST',
@@ -139,17 +168,16 @@ const ExploreAssistant = () => {
       },
       
       body: JSON.stringify({
-        explore: `Dimensions Used to group by information (follow the instructions in tags when using a specific field; if map used include a location or lat long dimension;):\n 
-        ${fields.dimensions.join(';')},\n 
-        Measures are used to perform calculations (if top, bottom, total, sum, etc. are used include a measure):\n 
-        ${fields.measures.join(';')}`,
-        question: question,
-        explore_label:LOOKER_EXPLORE
+        contents: contents,
+        parameters: {
+          max_output_tokens: 1000,
+        },
       }),
     })
 
+    console.log(responseData)
+
     const exploreData = await responseData.text()
-    console.log(exploreData)
     setExploreUrl(exploreData.trim() + '&toggle=dat,pik,vis')
     // await updateData('chat',question, { message: question, url: exploreData.trim() + '&toggle=dat,pik,vis'})
     data[question] = { message: question, url: exploreData.trim() + '&toggle=dat,pik,vis'}
@@ -506,13 +534,13 @@ const BardLogo = ({ search }: BardLogoProps) => {
     <svg width={'30%'} height={'30%'} viewBox="0 -900 900 900" >
       <path fill="url(#b)" className={styles.bard} d="M700-480q0-92-64-156t-156-64q92 0 156-64t64-156q0 92 64 156t156 64q-92 0-156 64t-64 156ZM80-80v-720q0-33 23.5-56.5T160-880h400v80H160v525l46-45h594v-241h80v241q0 33-23.5 56.5T800-240H240L80-80Zm160-320v-80h400v80H240Zm0-120v-80h360v80H240Zm0-120v-80h200v80H240Z"/>
       <linearGradient id='b' gradientUnits='objectBoundingBox' x1='0' y1='1' x2='1' y2='1'>
-         <stop offset='0' stop-color='#1A73E8'>
-            <animate attributeName="stop-color"
+         <stop offset='0' stopColor='#1A73E8'>
+            <animate attributeName="stopColor"
                values="blue;cyan;peach;yellow;orange;blue" dur="20s" repeatCount="indefinite">
             </animate>
          </stop>
-         <stop offset='1' stop-color='#FFDDB7' stop-opacity="0">
-            <animate attributeName="stop-color"
+         <stop offset='1' stopColor='#FFDDB7' stopOpacity="0">
+            <animate attributeName="stopColor"
                values="peach;orange;red;purple;cyan;blue;green;peach" dur="20s" repeatCount="indefinite">
             </animate>
          </stop>
