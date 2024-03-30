@@ -137,8 +137,6 @@ const ExploreAssistantPage = () => {
       }),
     })
 
-    console.log(responseData)
-
     const exploreData = await responseData.text()
     setExploreUrl(exploreData.trim() + '&toggle=dat,pik,vis')
     // await updateData('chat',question, { message: question, url: exploreData.trim() + '&toggle=dat,pik,vis'})

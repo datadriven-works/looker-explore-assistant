@@ -50,7 +50,6 @@ export const initDB = () => {
 
       // if the data object store doesn't exist, create it
       if (!db.objectStoreNames.contains(Stores.Chat)) {
-        console.log('Creating chat store')
         db.createObjectStore(Stores.Chat, { autoIncrement: true })
       }
     }
@@ -58,8 +57,6 @@ export const initDB = () => {
     request.onsuccess = () => {
       db = request.result
       version = db.version
-
-      console.log('request.onsuccess - initDB', version)
       resolve(true)
     }
 

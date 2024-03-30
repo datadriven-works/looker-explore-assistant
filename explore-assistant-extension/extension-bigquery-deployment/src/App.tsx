@@ -90,7 +90,7 @@ const ExploreAssistant = () => {
         ', tags: ' + tags.join(',')
       )
     })
-    console.log(dimensions)
+    
     const measures = fields.measures.map((field: any) => {
       const { name, type, description, tags } = field
       return (
@@ -144,7 +144,7 @@ const ExploreAssistant = () => {
     if(createSQLQuery.slug) {
       const runSQLQuery = await core40SDK.ok(core40SDK.run_sql_query(createSQLQuery.slug,'json'))
       const exploreData = await runSQLQuery[0]['generated_content']
-      console.log(exploreData)
+    
       setExploreUrl(exploreData.trim() + '&toggle=dat,pik,vis')
       // await updateData('chat',question, { message: question, url: exploreData.trim() + '&toggle=dat,pik,vis'})
       data[question] = { message: question, url: exploreData.trim() + '&toggle=dat,pik,vis'}

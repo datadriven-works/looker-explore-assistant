@@ -1,7 +1,51 @@
 import React from 'react'
-import { SpaceVertical } from '@looker/components'
+import {
+  Box,
+  Button,
+  Card,
+  Heading,
+  Paragraph,
+  Space,
+  SpaceVertical,
+} from '@looker/components'
 import { useHistory } from 'react-router-dom'
-import styles from './style.module.scss'
+
+interface DocCardProps {
+  title: string
+  model: string
+  description: string
+  doc: string
+}
+
+const DocCard = ({ title, model, description, doc }: DocCardProps) => {
+  return (
+    <a href={doc} target="_blank" rel="noreferrer">
+      <Card p={'u2'} border={'none'}>
+        <Space justify={'center'}>
+          <Box borderRight={'ui2'}>
+            <img
+              height={'100px'}
+              src={
+                'https://lh3.googleusercontent.com/-1brN-k2sapOWO4gfdJKGEH8kZbfFjrzEMjNs1dl4u64PBH-yxVmB5vG2aHDatRudSByL3lwViUg1w'
+              }
+            />
+          </Box>
+          <SpaceVertical align={'start'} gap={'none'}>
+            <Heading fontSize={'medium'} fontWeight={'bold'}>
+              {title}
+            </Heading>
+            <Heading fontSize={'xsmall'} fontWeight={'semiBold'}>
+              {model}
+            </Heading>
+            <Paragraph marginTop={'u4'} fontSize={'small'} color={'text2'}>
+              {description}
+            </Paragraph>
+          </SpaceVertical>
+        </Space>
+      </Card>
+    </a>
+  )
+}
 
 const LandingPage = () => {
   const history = useHistory()
@@ -28,96 +72,36 @@ const LandingPage = () => {
 
   return (
     <SpaceVertical>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          alignContent: 'center',
-          width: '100%',
-          height: '100%',
-          padding: '2rem',
-          paddingTop: '10rem',
-          zIndex: 1,
-        }}
+      <SpaceVertical
+        paddingTop={'10rem'}
+        maxWidth={'30rem'}
+        margin={'auto'}
+        gap={'none'}
       >
-        <div
-          style={{
-            width: '40vw',
-          }}
-        >
-          <span className={styles.title}>Explore Assistant Demo</span>
-          <span className={styles.subTitle}>
-            Powered by Generative AI with Google
-          </span>
-          <button
-            className={styles.customButton}
-            style={{ backgroundColor: 'rgb(26,115,232)' }}
-            onClick={handleBegin}
-          >
-            Begin
-          </button>
+        <Heading fontSize={'xxxxlarge'} fontWeight={'bold'}>
+          Explore Assistant Demo
+        </Heading>
+        <Heading color={'inform'} fontSize={'large'} fontWeight={'semiBold'}>
+          Powered by Generative AI with Google
+        </Heading>
+        <Button marginTop={'u8'} onClick={handleBegin}>
+          Begin
+        </Button>
+
+        <SpaceVertical marginTop={'u8'} gap={'u14'}>
           {docs.map((doc, index) => {
             return (
-              <a href={doc.doc} target="_blank" rel="noreferrer" key={index}>
-                <div
-                  style={{
-                    cursor: 'pointer',
-                    width: '90%',
-                    height: '18vh',
-                    backgroundColor: 'white',
-                    marginTop: '2rem',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '20%',
-                      height: 'auto',
-                      borderRight: '1px solid #ccc',
-                    }}
-                  >
-                    <img
-                      height="70%"
-                      width="auto"
-                      src={
-                        'https://lh3.googleusercontent.com/-1brN-k2sapOWO4gfdJKGEH8kZbfFjrzEMjNs1dl4u64PBH-yxVmB5vG2aHDatRudSByL3lwViUg1w'
-                      }
-                    />
-                  </div>
-                  <div
-                    style={{
-                      paddingTop: '1rem',
-                      paddingLeft: '1rem',
-                      width: '80%',
-                      height: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <span className={styles.heading}>{doc.title}</span>
-                    <span className={styles.subHeading}>{doc.model}</span>
-                    <p
-                      style={{
-                        fontSize: '0.8rem',
-                        width: 'auto',
-                        height: 'auto',
-                        color: 'black',
-                        opacity: 0.8,
-                      }}
-                    >
-                      {doc.description}
-                    </p>
-                  </div>
-                </div>
-              </a>
+              <DocCard
+                key={index}
+                title={doc.title}
+                model={doc.model}
+                description={doc.description}
+                doc={doc.doc}
+              />
             )
           })}
-        </div>
-      </div>
+        </SpaceVertical>
+      </SpaceVertical>
     </SpaceVertical>
   )
 }
