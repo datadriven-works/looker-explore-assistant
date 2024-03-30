@@ -1,8 +1,10 @@
 import React from 'react'
 import { SpaceVertical } from '@looker/components'
+import { useHistory } from 'react-router-dom'
 import styles from './style.module.scss'
 
-const LandingPage = ({ begin }: { begin: boolean }) => {
+const LandingPage = () => {
+  const history = useHistory()
   const docs = [
     {
       title: 'No Code Prompt Tuning',
@@ -19,6 +21,10 @@ const LandingPage = ({ begin }: { begin: boolean }) => {
       doc: 'https://developers.generativeai.google/tutorials/text_quickstart',
     },
   ]
+
+  const handleBegin = () => {
+    history.push('/assistant')
+  }
 
   return (
     <SpaceVertical>
@@ -41,23 +47,20 @@ const LandingPage = ({ begin }: { begin: boolean }) => {
             width: '40vw',
           }}
         >
-          <span
-           className={styles.title}
-           >
-            Explore Assistant Demo
-          </span>
+          <span className={styles.title}>Explore Assistant Demo</span>
           <span className={styles.subTitle}>
             Powered by Generative AI with Google
           </span>
-          <button className={styles.customButton} style={{ backgroundColor: 'rgb(26,115,232)' }} onClick={() => begin(true)}>Begin</button>
+          <button
+            className={styles.customButton}
+            style={{ backgroundColor: 'rgb(26,115,232)' }}
+            onClick={handleBegin}
+          >
+            Begin
+          </button>
           {docs.map((doc, index) => {
             return (
-              <a
-                href={doc.doc}
-                target="_blank"
-                rel="noreferrer"
-                key={index}
-              >
+              <a href={doc.doc} target="_blank" rel="noreferrer" key={index}>
                 <div
                   style={{
                     cursor: 'pointer',
@@ -80,7 +83,9 @@ const LandingPage = ({ begin }: { begin: boolean }) => {
                     <img
                       height="70%"
                       width="auto"
-                      src={'https://lh3.googleusercontent.com/-1brN-k2sapOWO4gfdJKGEH8kZbfFjrzEMjNs1dl4u64PBH-yxVmB5vG2aHDatRudSByL3lwViUg1w'}
+                      src={
+                        'https://lh3.googleusercontent.com/-1brN-k2sapOWO4gfdJKGEH8kZbfFjrzEMjNs1dl4u64PBH-yxVmB5vG2aHDatRudSByL3lwViUg1w'
+                      }
                     />
                   </div>
                   <div
@@ -93,12 +98,8 @@ const LandingPage = ({ begin }: { begin: boolean }) => {
                       flexDirection: 'column',
                     }}
                   >
-                    <span className={styles.heading}>
-                      {doc.title}
-                    </span>
-                    <span className={styles.subHeading}>
-                      {doc.model}
-                    </span>
+                    <span className={styles.heading}>{doc.title}</span>
+                    <span className={styles.subHeading}>{doc.model}</span>
                     <p
                       style={{
                         fontSize: '0.8rem',
