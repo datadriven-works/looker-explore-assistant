@@ -135,6 +135,10 @@ const ExploreAssistantPage = () => {
         fields: 'fields',
       }),
     )
+    if (!fields || !fields.dimensions || !fields.measures) {
+      return
+    }
+
     const dimensions = fields.dimensions.map((field: any) => {
       const { name, type, description, tags } = field
       return (
@@ -233,7 +237,7 @@ const ExploreAssistantPage = () => {
 
     const exploreData = await responseData.text()
     setExploreUrl(exploreData.trim() + '&toggle=dat,pik,vis')
-    // await updateData('chat',question, { message: question, url: exploreData.trim() + '&toggle=dat,pik,vis'})
+    
     data[question] = {
       message: question,
       url: exploreData.trim() + '&toggle=dat,pik,vis',
@@ -247,10 +251,6 @@ const ExploreAssistantPage = () => {
    * @param prompt - The optional prompt string.
    */
   const handleSubmit = async (prompt: string | undefined) => {
-    // const status = await initDB()
-    // setDb(status)
-    // await addData('chat', { message: query })
-    // setData([...data, { message: prompt !== undefined ? prompt : query }])
     data[prompt !== undefined ? prompt : query] = {
       message: prompt !== undefined ? prompt : query,
     }
