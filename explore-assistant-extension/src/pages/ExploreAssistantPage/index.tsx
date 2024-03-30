@@ -4,19 +4,26 @@ import {
   Button,
   FieldTextArea,
   Heading,
+  Layout,
   Paragraph,
-  Space,
   Tab2,
   Tabs2,
 } from '@looker/components'
-import React, { FormEvent, useContext, useEffect } from 'react'
+import React, { FormEvent, useCallback, useContext, useEffect } from 'react'
 import { ExploreEmbed } from '../../components/ExploreEmbed'
 import BardLogo from '../../components/BardLogo'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 
 import examples from '../../../examples.json'
 import { useDispatch, useSelector } from 'react-redux'
-import { setDimensions, setHistory, setIsQuerying, setMeasures, setExploreUrl, addToHistory } from '../../slices/assistantSlice'
+import {
+  setDimensions,
+  setHistory,
+  setIsQuerying,
+  setMeasures,
+  setExploreUrl,
+  addToHistory,
+} from '../../slices/assistantSlice'
 import SamplePrompts from '../../components/SamplePrompts'
 import PromptHistory from '../../components/PromptHistory'
 import { RootState } from '../../store'
@@ -27,91 +34,81 @@ const ExploreAssistantPage = () => {
   const LOOKER_EXPLORE = process.env.LOOKER_EXPLORE || ''
 
   const dispatch = useDispatch()
-  const [exploreLoading, setExploreLoading] = React.useState<boolean>(false)
   const [query, setQuery] = React.useState<string>('')
   const [submit, setSubmit] = React.useState<boolean>(false)
   const { core40SDK, extensionSDK } = useContext(ExtensionContext)
 
-  const { exploreUrl, isQuerying } = useSelector((state: RootState) => state.assistant)
+  const { exploreUrl, isQuerying, dimensions, measures } = useSelector(
+    (state: RootState) => state.assistant,
+  )
 
   // fetch the chat history from local storage on startup
   useEffect(() => {
     extensionSDK.localStorageGetItem('chat_history').then((responses) => {
-      if(responses === null) {
+      if (responses === null) {
         return
       }
       const data = JSON.parse(responses)
       const history = []
       for (const [key, value] of Object.entries(data)) {
-        if(key == '' || typeof value != 'object' || value == null) {
+        if (key == '' || typeof value != 'object' || value == null) {
           continue
         }
-        if(value['url'] == undefined || value['message'] == undefined) {
+        if (value['url'] == undefined || value['message'] == undefined) {
           continue
         }
         history.push({
           message: value['message'],
-          url: value['url']
+          url: value['url'],
         })
-      }      
+      }
       dispatch(setHistory(history))
     })
   }, [])
 
   // fetch the explore definition from Looker on startup
   useEffect(() => {
-    core40SDK.ok(
-      core40SDK.lookml_model_explore({
-        lookml_model_name: LOOKER_MODEL,
-        explore_name: LOOKER_EXPLORE,
-        fields: 'fields',
-      }),
-    ).then(({ fields }) => {
-      if (!fields || !fields.dimensions || !fields.measures) {
-        return
-      }
-      const dimensions = fields.dimensions.map((field: any) => {
-        const { name, type, description, tags } = field
-        return {
-          name: name,
-          type: type,
-          description: description,
-          tags: tags,
+    core40SDK
+      .ok(
+        core40SDK.lookml_model_explore({
+          lookml_model_name: LOOKER_MODEL,
+          explore_name: LOOKER_EXPLORE,
+          fields: 'fields',
+        }),
+      )
+      .then(({ fields }) => {
+        if (!fields || !fields.dimensions || !fields.measures) {
+          return
         }
-      })
+        const dimensions = fields.dimensions.map((field: any) => {
+          const { name, type, description, tags } = field
+          return {
+            name: name,
+            type: type,
+            description: description,
+            tags: tags,
+          }
+        })
 
-      const measures = fields.measures.map((field: any) => {
-        const { name, type, description, tags } = field
-        return {
-          name: name,
-          type: type,
-          description: description,
-          tags: tags,
-        }
+        const measures = fields.measures.map((field: any) => {
+          const { name, type, description, tags } = field
+          return {
+            name: name,
+            type: type,
+            description: description,
+            tags: tags,
+          }
+        })
+        dispatch(setDimensions(dimensions))
+        dispatch(setMeasures(measures))
       })
-      dispatch(setDimensions(dimensions))
-      dispatch(setMeasures(measures))
-    })
   }, [])
 
-  const handleChange = (e: FormEvent<HTMLTextAreaElement>) => {
-    setQuery(e.currentTarget.value)
-  }
+  const fetchData = useCallback(
+    async ({ prompt }: { prompt: string }) => {
+      const question = prompt !== undefined ? prompt : query
 
-  /**
-   * Fetches data from the VERTEX_AI_ENDPOINT based on the provided prompt and fields.
-   * If prompt is undefined, it uses the query as the prompt.
-   * @param prompt - The prompt to be used for the question.
-   * @param fields - The fields object containing dimensions and measures.
-   * @returns {Promise<void>} - A promise that resolves when the data is fetched.
-   */
-  const fetchData = async (
-    prompt: string | undefined,
-    fields?: any,
-  ): Promise<void> => {
-    const question = prompt !== undefined ? prompt : query
-
-    const contents = `
+      const contents = `
     Context
     ----------
 
@@ -121,10 +118,10 @@ const ExploreAssistantPage = () => {
     ----------
 
     Dimensions Used to group by information (follow the instructions in tags when using a specific field; if map used include a location or lat long dimension;):
-        ${fields.dimensions.join(';')}
+        ${dimensions.join(';')}
       
     Measures are used to perform calculations (if top, bottom, total, sum, etc. are used include a measure):
-        ${fields.measures.join(';')}
+        ${measures.join(';')}
 
     Example
     ----------
@@ -138,32 +135,36 @@ const ExploreAssistantPage = () => {
 
     Output
     ----------
+`
 
-      `
-
-    const responseData = await fetch(VERTEX_AI_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-
-      body: JSON.stringify({
-        contents: contents,
-        parameters: {
-          max_output_tokens: 1000,
+      const responseData = await fetch(VERTEX_AI_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-    })
 
-    const exploreData = await responseData.text()
-    const newExploreUrl = exploreData.trim() + '&toggle=dat,pik,vis'
+        body: JSON.stringify({
+          contents: contents,
+          parameters: {
+            max_output_tokens: 1000,
+          },
+        }),
+      })
 
-    dispatch(setExploreUrl(newExploreUrl))
-    dispatch(setIsQuerying(false))
-    dispatch(addToHistory({ message: question, url: newExploreUrl }))
-    
+      const exploreData = await responseData.text()
+      const newExploreUrl = exploreData.trim() + '&toggle=dat,pik,vis'
 
-    await extensionSDK.localStorageSetItem(`chat_history`, JSON.stringify(data))
+      dispatch(setExploreUrl(newExploreUrl))
+      dispatch(setIsQuerying(false))
+      dispatch(addToHistory({ message: question, url: newExploreUrl }))
+
+      //await extensionSDK.localStorageSetItem(`chat_history`, JSON.stringify(data))
+    },
+    [dimensions, measures],
+  )
+
+  const handleChange = (e: FormEvent<HTMLTextAreaElement>) => {
+    setQuery(e.currentTarget.value)
   }
 
   /**
@@ -209,7 +210,7 @@ const ExploreAssistantPage = () => {
 
   return (
     <>
-      <Space>
+      <Layout hasAside={true}>
         <Aside
           paddingX={'u8'}
           paddingY={'u4'}
@@ -247,20 +248,9 @@ const ExploreAssistantPage = () => {
             </Tab2>
           </Tabs2>
         </Aside>
-        <Box>
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              position: 'absolute',
-              zIndex: !exploreLoading ? 1 : -1,
-            }}
-          >
-            <BardLogo />
-          </div>
+        <Box width={'100%'}>
+          <BardLogo />
+          {isQuerying && <BardLogo />}
           {exploreUrl && (
             <ExploreEmbed
               exploreUrl={exploreUrl}
@@ -270,7 +260,7 @@ const ExploreAssistantPage = () => {
             />
           )}
         </Box>
-      </Space>
+      </Layout>
     </>
   )
 }

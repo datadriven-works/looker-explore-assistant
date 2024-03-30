@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '../store'
-import { Box, Card, Span } from '@looker/components'
+import { Box, Card, SpaceVertical, Span } from '@looker/components'
 
 interface PromptHistoryProps {
   handleHistorySubmit: (prompt: string) => void
@@ -9,11 +9,11 @@ interface PromptHistoryProps {
 const PromptHistory = ({ handleHistorySubmit }: PromptHistoryProps) => {
   const { history } = useSelector((state: RootState) => state.assistant)
   return (
-    <>
+    <SpaceVertical gap='u2'>
       {history.map((item: any, index: number) => {
         return (
           <Card
-            m={'u4'}
+            width={'100%'}
             border={'ui1'}
             borderRadius={'large'}
             p="u2"
@@ -26,7 +26,7 @@ const PromptHistory = ({ handleHistorySubmit }: PromptHistoryProps) => {
           </Card>
         )
       })}
-    </>
+    </SpaceVertical>
   )
 }
 
