@@ -7,16 +7,15 @@ import {
   Heading,
   Paragraph,
   Space,
-  SpaceVertical,
   Tab2,
   Tabs2,
+  Card,
 } from '@looker/components'
 import React, { FormEvent, useContext, useEffect } from 'react'
 import { ExploreEmbed } from '../../components/ExploreEmbed'
 import BardLogo from '../../components/BardLogo'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 
-import styles from './style.module.scss'
 import examples from '../../../examples.json'
 
 interface SamplePromptsProps {
@@ -45,23 +44,24 @@ const SamplePrompts = ({ handleExampleSubmit }: SamplePromptsProps) => {
   return (
     <div>
       {categorizedPrompts.map((item, index: number) => (
-        <div
+        <Box
+          cursor="pointer"
           key={index}
-          className={styles.card}
           onClick={() => {
             handleExampleSubmit(item.prompt)
           }}
         >
-          <span
-            style={{ color: `${item.color}` }}
-            className={styles.subHeading}
-          >
-            {item.category}
-          </span>
-          <span className={styles.text} id="examplePrompt">
-            {item.prompt}
-          </span>
-        </div>
+          <Card border={'ui1'} fontSize={'small'} m="u1" px="u2" py="u4">
+            <Heading
+              fontSize={'small'}
+              fontWeight={'semiBold'}
+              style={{ color: `${item.color}` }}
+            >
+              {item.category}
+            </Heading>
+            <Paragraph mt='u2'>{item.prompt}</Paragraph>
+          </Card>
+        </Box>
       ))}
     </div>
   )
@@ -89,17 +89,18 @@ const PromptHistory = ({ handleHistorySubmit }: PromptHistoryProps) => {
           .filter((item: any) => data[item].message !== '')
           .map((item: any, index: number) => {
             return (
-              <Box
+              <Card
                 m={'u4'}
-                border={'ui2'}
+                border={'ui1'}
                 borderRadius={'large'}
                 p="u2"
-                cursor="pointer"
                 key={index}
                 onClick={() => handleHistorySubmit(data[item].message)}
               >
-                <Span fontSize={'small'}>{data[item].message}</Span>
-              </Box>
+                <Box cursor="pointer">
+                  <Span fontSize={'small'}>{data[item].message}</Span>
+                </Box>
+              </Card>
             )
           })}
     </>
