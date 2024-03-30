@@ -65,6 +65,13 @@ resource "google_storage_bucket_object" "object" {
   source = data.archive_file.default.output_path # Add path to the zipped function source code
 }
 
+resource google_artifact_registry_repository "default" {
+  repository_id = "explore-assistant-repo"
+  location      = var.deployment_region
+  project       = var.project_id
+  format       = "DOCKER"
+}
+
 resource "google_cloudfunctions2_function" "default" {
   name        = var.cloud_run_service_name
   location    = var.deployment_region
@@ -73,11 +80,16 @@ resource "google_cloudfunctions2_function" "default" {
   build_config {
     runtime     = "python310"
     entry_point = "cloud_function_entrypoint" # Set the entry point
+    docker_repository = google_artifact_registry_repository.default.id
     source {
       storage_source {
         bucket = google_storage_bucket.default.name
         object = google_storage_bucket_object.object.name
       }
+    }
+
+    environment_variables = {
+      "FUNCTIONS_FRAMEWORK" = 1
     }
   }
 
