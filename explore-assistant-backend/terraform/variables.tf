@@ -32,3 +32,12 @@ variable "cloud_run_service_name" {
     type = string
     default = "explore-assistant-api"
 }
+
+#
+# BIGQUERY VARIABLES
+# 
+
+variable "dataset_id_name" {
+    type = string
+    default = "llm"
+}

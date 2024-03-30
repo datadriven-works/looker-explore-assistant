@@ -9,7 +9,7 @@ cd explore-assistant-cloud-function
 pip3 install -r requirements.txt
 ```
 
-Run it
+Run it locally
 
 ```
 python main.py
