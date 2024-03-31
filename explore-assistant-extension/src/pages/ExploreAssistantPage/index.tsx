@@ -107,26 +107,41 @@ const ExploreAssistantPage = () => {
 
   const fetchData = useCallback(
     async (prompt: string) => {
+
+      function formatContent(field: { name?: string; type?: string; description?: string; tags?: string[] }) {
+        let result = '';
+        if (field.name) result += 'name: ' + field.name;
+        if (field.type) result += (result ? ', ' : '') + 'type: ' + field.type;
+        if (field.description) result += (result ? ', ' : '') + 'description: ' + field.description;
+        if (field.tags && field.tags.length) result += (result ? ', ' : '') + 'tags: ' + field.tags.join(',');
+      
+        return result;
+      }
+      
+
       const contents = `
     Context
     ----------
 
-    Youre a developer who would transalate questions to a structured URL query based on the following dictionary - choose only the fileds in the below description user_order_facts is an extension of user and should be used when referring to users or customers.Generate only one answer, no more.
+    You're a developer who would transalate questions to a structured URL query based on the following dictionary - choose only the fileds in the below description user_order_facts is an extension of user and should be used when referring to users or customers.Generate only one answer, no more.
 
     LookML Metadata
     ----------
 
     Dimensions Used to group by information (follow the instructions in tags when using a specific field; if map used include a location or lat long dimension;):
-        ${dimensions.join(';')}
+        
+  ${dimensions.map(formatContent).join('\n')}
       
     Measures are used to perform calculations (if top, bottom, total, sum, etc. are used include a measure):
-        ${measures.join(';')}
+  
+  ${measures.map(formatContent).join('\n')}
 
     Example
     ----------
-    ${examples
-      .map((item) => `input: ${item['input']} ; output: ${item['output']}`)
-      .join('\n')}
+
+  ${examples
+    .map((item) => `input: ${item['input']} ; output: ${item['output']}`)
+    .join('\n')}
 
     Input
     ----------
@@ -135,7 +150,7 @@ const ExploreAssistantPage = () => {
     Output
     ----------
 `
-      console.log(contents)
+      
       const responseData = await fetch(VERTEX_AI_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -173,7 +188,6 @@ const ExploreAssistantPage = () => {
     setTextAreaValue(e.currentTarget.value)
   }
 
-  
   const handlePromptSubmit = (prompt: string) => {
     console.log('prompt', prompt)
     setTextAreaValue(prompt)
