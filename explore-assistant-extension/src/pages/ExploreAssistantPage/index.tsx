@@ -29,6 +29,7 @@ import SamplePrompts from '../../components/SamplePrompts'
 import PromptHistory from '../../components/PromptHistory'
 import { RootState } from '../../store'
 import process from 'process'
+import { UtilsHelper } from '../../utils/Helper'
 
 interface ModelParameters {
   max_output_tokens?: number
@@ -39,16 +40,17 @@ const generateSQL = (
   prompt: string,
   parameters: ModelParameters,
 ) => {
-  const escapedPrompt = prompt.replace(/'/g, "''");
+  const escapedPrompt =  UtilsHelper.escapeQueryAll(prompt);        
+  var subselect = `SELECT '` + escapedPrompt + `' AS prompt`;
 
   return `
 
-  SELECT ml_generate_text_llm_result as r, ml_generate_text_status as status
+  SELECT ml_generate_text_llm_result AS generated_content
   FROM
   ML.GENERATE_TEXT(
       MODEL ${model_id},
       (
-        SELECT '${escapedPrompt}' as prompt
+        ${subselect}
       ),
       STRUCT(
       0.05 AS temperature,
@@ -245,9 +247,8 @@ const ExploreAssistantPage = () => {
         sql: generateSQL(VERTEX_BIGQUERY_MODEL_ID, contents, parameters),
       }),
     )
-    console.log(createSQLQuery)
+    
     if (createSQLQuery.slug) {
-      console.log(createSQLQuery.slug)
       const runSQLQuery = await core40SDK.ok(
         core40SDK.run_sql_query(createSQLQuery.slug, 'json'),
       )
