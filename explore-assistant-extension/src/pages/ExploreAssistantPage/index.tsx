@@ -24,7 +24,6 @@ import {
   setMeasures,
   setExploreUrl,
   addToHistory,
-  setQuery,
 } from '../../slices/assistantSlice'
 import SamplePrompts from '../../components/SamplePrompts'
 import PromptHistory from '../../components/PromptHistory'
@@ -39,7 +38,7 @@ const ExploreAssistantPage = () => {
   const [textAreaValue, setTextAreaValue] = React.useState<string>('')
   const { core40SDK, extensionSDK } = useContext(ExtensionContext)
 
-  const { exploreUrl, isQuerying, dimensions, measures, query } = useSelector(
+  const { exploreUrl, isQuerying, dimensions, measures } = useSelector(
     (state: RootState) => state.assistant,
   )
 
@@ -150,7 +149,9 @@ const ExploreAssistantPage = () => {
     Output
     ----------
 `
-      
+      dispatch(setIsQuerying(true))
+      dispatch(setExploreUrl(''))
+    
       const responseData = await fetch(VERTEX_AI_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -178,9 +179,6 @@ const ExploreAssistantPage = () => {
   )
 
   const handleSubmit = useCallback(async () => {
-    dispatch(setIsQuerying(true))
-    dispatch(setExploreUrl(''))
-    dispatch(setQuery(textAreaValue))
     fetchData(textAreaValue)
   }, [textAreaValue])
 
@@ -189,9 +187,8 @@ const ExploreAssistantPage = () => {
   }
 
   const handlePromptSubmit = (prompt: string) => {
-    console.log('prompt', prompt)
     setTextAreaValue(prompt)
-    handleSubmit()
+    fetchData(prompt)
   }
 
   return (
