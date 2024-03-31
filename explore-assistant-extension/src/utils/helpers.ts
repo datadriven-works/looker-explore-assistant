@@ -24,59 +24,87 @@ SOFTWARE.
 
 */
 
-interface GenerateText {
-    model: string,
-    explore: string,
-    input: string
+import { ExtensionContext } from "@looker/extension-sdk-react"
+import process from "process"
+import { useContext } from "react"
+const VERTEX_AI_ENDPOINT = process.env.VERTEX_AI_ENDPOINT || ''
+const VERTEX_BIGQUERY_LOOKER_MODEL = process.env.VERTEX_BIGQUERY_MODEL || ''
+const VERTEX_BIGQUERY_MODEL_ID = process.env.VERTEX_BIGQUERY_MODEL_ID || ''
+
+interface ModelParameters {
+  max_output_tokens?: number
 }
 
-interface GenerateTextRequest extends GenerateText {
-    metadata: string,
-    model_id: string
-}
+export const generateSQL = (model_id: string, prompt: string, parameters: ModelParameters) => {
+  return `
 
-interface GenerateTextFeedback extends GenerateText {
-    response?: string,
-    accurate?: boolean,
-    feedback?: string
-}
+  SELECT ml_generate_text_llm_result as r, ml_generate_text_status as status
+  FROM
+  ML.GENERATE_TEXT(
+      MODEL ${model_id},
+      (
+        ${prompt}
+      ),
+      STRUCT(
+      0.05 AS temperature,
+      1024 AS max_output_tokens,
+      0.98 AS top_p,
+      TRUE AS flatten_json_output,
+      1 AS top_k)
+    )
 
-export const generateText = (request: GenerateTextRequest) => {
-    return `
-          DECLARE context STRING;
-          SET context = """Youre a developer who would transalate questions to a structured URL query based on the following dictionary - choose only the fileds in the below description
-          user_order_facts is an extension of user and should be used when referring to users or customers.Generate only one answer, no more.""";
-
-          SELECT ml_generate_text_llm_result AS generated_content
-          FROM ML.GENERATE_TEXT(
-              MODEL ${request.model_id},
-              (
-                  SELECT FORMAT('Context: %s; LookML Metadata: %s; Examples: %s; input: %s, output: ',context,"${request.metadata}",examples.examples, "${request.input}") as prompt
-                  FROM explore_assistant.explore_assistant_examples as examples
-                  WHERE examples.explore_id = "${request.model}:${request.explore}"
-              ),
-                  STRUCT(
-                      0.1 AS temperature,
-                      1024 AS max_output_tokens,
-                      0.95 AS top_p,
-                      40 AS top_k,
-                      TRUE AS flatten_json_output
-              )
-          )
     `
 }
 
-export const insertResponse = (request: GenerateTextFeedback) => {
-    return `
-        INSERT INTO explore_assistant.explore_assistant_responses (explore_id,input,output,accurate,feedback)
-        VALUES ('${request.model}:${request.explore}','${request.input}','${request.response}',,)
-    `
+export const vertexBackendRequest = async (
+  contents: string,
+  parameters: ModelParameters,
+) => {
+  if (VERTEX_AI_ENDPOINT) {
+    return vertextCloudFunction(contents, parameters)
+  }
+
+  if(VERTEX_BIGQUERY_LOOKER_MODEL && VERTEX_BIGQUERY_MODEL_ID) {
+    return vertextBigQuery(contents, parameters)
+  }
 }
 
-export const insertResponseFeedback = (request: GenerateTextFeedback) => {
-    return `
-        UPDATE explore_assistant.explore_assistant_responses SET accurate = ${request.accurate} AND feedback = '${request.feedback}'
-        WHERE explore_id = '${request.model}:${request.explore}'
-    `
+export const vertextBigQuery = async (
+  contents: string,
+  parameters: ModelParameters,
+) => {
+
+    const { core40SDK } = useContext(ExtensionContext)
+
+    const createSQLQuery = await core40SDK.ok(
+        core40SDK.create_sql_query(
+          {
+            model_name: VERTEX_BIGQUERY_LOOKER_MODEL,
+            sql: generateSQL(VERTEX_BIGQUERY_MODEL_ID, contents, parameters),
+        }))
+      
+      if(createSQLQuery.slug) {
+        const runSQLQuery = await core40SDK.ok(core40SDK.run_sql_query(createSQLQuery.slug,'json'))
+        const exploreData = await runSQLQuery[0]['generated_content']
+        return exploreData
+      }
 }
 
+export const vertextCloudFunction = async (
+  contents: string,
+  parameters: ModelParameters,
+) => {
+  const responseData = await fetch(VERTEX_AI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+
+    body: JSON.stringify({
+      contents: contents,
+      parameters: parameters,
+    }),
+  })
+  const response = await responseData.text()
+  return response.trim()
+}

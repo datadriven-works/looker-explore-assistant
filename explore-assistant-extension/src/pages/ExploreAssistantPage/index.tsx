@@ -28,9 +28,9 @@ import {
 import SamplePrompts from '../../components/SamplePrompts'
 import PromptHistory from '../../components/PromptHistory'
 import { RootState } from '../../store'
+import { vertexBackendRequest } from '../../utils/helpers'
 
 const ExploreAssistantPage = () => {
-  const VERTEX_AI_ENDPOINT = process.env.VERTEX_AI_ENDPOINT || ''
   const LOOKER_MODEL = process.env.LOOKER_MODEL || ''
   const LOOKER_EXPLORE = process.env.LOOKER_EXPLORE || ''
 
@@ -106,17 +106,22 @@ const ExploreAssistantPage = () => {
 
   const fetchData = useCallback(
     async (prompt: string) => {
+      function formatContent(field: {
+        name?: string
+        type?: string
+        description?: string
+        tags?: string[]
+      }) {
+        let result = ''
+        if (field.name) result += 'name: ' + field.name
+        if (field.type) result += (result ? ', ' : '') + 'type: ' + field.type
+        if (field.description)
+          result += (result ? ', ' : '') + 'description: ' + field.description
+        if (field.tags && field.tags.length)
+          result += (result ? ', ' : '') + 'tags: ' + field.tags.join(',')
 
-      function formatContent(field: { name?: string; type?: string; description?: string; tags?: string[] }) {
-        let result = '';
-        if (field.name) result += 'name: ' + field.name;
-        if (field.type) result += (result ? ', ' : '') + 'type: ' + field.type;
-        if (field.description) result += (result ? ', ' : '') + 'description: ' + field.description;
-        if (field.tags && field.tags.length) result += (result ? ', ' : '') + 'tags: ' + field.tags.join(',');
-      
-        return result;
+        return result
       }
-      
 
       const contents = `
     Context
@@ -151,23 +156,12 @@ const ExploreAssistantPage = () => {
 `
       dispatch(setIsQuerying(true))
       dispatch(setExploreUrl(''))
-    
-      const responseData = await fetch(VERTEX_AI_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
 
-        body: JSON.stringify({
-          contents: contents,
-          parameters: {
-            max_output_tokens: 1000,
-          },
-        }),
+      const response = await vertexBackendRequest(contents, {
+        max_output_tokens: 1000,
       })
 
-      const exploreData = await responseData.text()
-      const newExploreUrl = exploreData.trim() + '&toggle=dat,pik,vis'
+      const newExploreUrl = response + '&toggle=dat,pik,vis'
 
       dispatch(setExploreUrl(newExploreUrl))
       dispatch(setIsQuerying(false))
@@ -175,7 +169,10 @@ const ExploreAssistantPage = () => {
       const newHistoryItem = { message: prompt, url: newExploreUrl }
       dispatch(addToHistory(newHistoryItem))
       const updatedHistory = [...history, newHistoryItem]
-      await extensionSDK.localStorageSetItem(`chat_history`, JSON.stringify(updatedHistory))
+      await extensionSDK.localStorageSetItem(
+        `chat_history`,
+        JSON.stringify(updatedHistory),
+      )
     },
     [dimensions, measures],
   )
