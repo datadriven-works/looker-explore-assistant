@@ -36,7 +36,7 @@ const BundleAnalyzerPlugin =
 if (!fs.existsSync('.env')) {
   fs.copyFileSync('.env_example', '.env')
 }
-dotenv.config()
+env = dotenv.config().parsed
 if (!process.env.POSTS_SERVER_URL) {
   // webpack 5 is stricter about environment variables. The POSTS_SERVER_URL
   // environment variable was not mentioned in the README so default it for
@@ -88,6 +88,6 @@ module.exports = {
     new BundleAnalyzerPlugin({
       analyzerMode: process.env.ANALYZE_MODE || 'disabled',
     }),
-    new webpack.EnvironmentPlugin(['VERTEX_AI_ENDPOINT','LOOKER_MODEL','LOOKER_EXPLORE']),
+    new webpack.EnvironmentPlugin(Object.keys(env)),
   ],
 }

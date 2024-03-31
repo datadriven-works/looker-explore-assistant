@@ -28,11 +28,47 @@ import {
 import SamplePrompts from '../../components/SamplePrompts'
 import PromptHistory from '../../components/PromptHistory'
 import { RootState } from '../../store'
-import { vertexBackendRequest } from '../../utils/helpers'
+import process from 'process'
+
+interface ModelParameters {
+  max_output_tokens?: number
+}
+
+const generateSQL = (
+  model_id: string,
+  prompt: string,
+  parameters: ModelParameters,
+) => {
+  const escapedPrompt = prompt.replace(/'/g, "''");
+
+  return `
+
+  SELECT ml_generate_text_llm_result as r, ml_generate_text_status as status
+  FROM
+  ML.GENERATE_TEXT(
+      MODEL ${model_id},
+      (
+        SELECT '${escapedPrompt}' as prompt
+      ),
+      STRUCT(
+      0.05 AS temperature,
+      1024 AS max_output_tokens,
+      0.98 AS top_p,
+      TRUE AS flatten_json_output,
+      1 AS top_k)
+    )
+
+    `
+}
 
 const ExploreAssistantPage = () => {
   const LOOKER_MODEL = process.env.LOOKER_MODEL || ''
   const LOOKER_EXPLORE = process.env.LOOKER_EXPLORE || ''
+
+  const VERTEX_AI_ENDPOINT = process.env.VERTEX_AI_ENDPOINT || ''
+  const VERTEX_BIGQUERY_LOOKER_MODEL =
+    process.env.VERTEX_BIGQUERY_LOOKER_MODEL || ''
+  const VERTEX_BIGQUERY_MODEL_ID = process.env.VERTEX_BIGQUERY_MODEL_ID || ''
 
   const dispatch = useDispatch()
   const [textAreaValue, setTextAreaValue] = React.useState<string>('')
@@ -127,7 +163,7 @@ const ExploreAssistantPage = () => {
     Context
     ----------
 
-    You're a developer who would transalate questions to a structured URL query based on the following dictionary - choose only the fileds in the below description user_order_facts is an extension of user and should be used when referring to users or customers.Generate only one answer, no more.
+    You are a developer who would transalate questions to a structured URL query based on the following dictionary - choose only the fileds in the below description user_order_facts is an extension of user and should be used when referring to users or customers.Generate only one answer, no more.
 
     LookML Metadata
     ----------
@@ -157,9 +193,18 @@ const ExploreAssistantPage = () => {
       dispatch(setIsQuerying(true))
       dispatch(setExploreUrl(''))
 
-      const response = await vertexBackendRequest(contents, {
+      const parameters = {
         max_output_tokens: 1000,
-      })
+      }
+
+      let response = ''
+      if (VERTEX_AI_ENDPOINT) {
+        response = await vertextCloudFunction(contents, parameters)
+      }
+
+      if (VERTEX_BIGQUERY_LOOKER_MODEL && VERTEX_BIGQUERY_MODEL_ID) {
+        response = await vertextBigQuery(contents, parameters)
+      }
 
       const newExploreUrl = response + '&toggle=dat,pik,vis'
 
@@ -188,6 +233,46 @@ const ExploreAssistantPage = () => {
   const handlePromptSubmit = (prompt: string) => {
     setTextAreaValue(prompt)
     fetchData(prompt)
+  }
+
+  const vertextBigQuery = async (
+    contents: string,
+    parameters: ModelParameters,
+  ) => {
+    const createSQLQuery = await core40SDK.ok(
+      core40SDK.create_sql_query({
+        connection_name: 'bigquery_data_driven_llm',
+        sql: generateSQL(VERTEX_BIGQUERY_MODEL_ID, contents, parameters),
+      }),
+    )
+    console.log(createSQLQuery)
+    if (createSQLQuery.slug) {
+      console.log(createSQLQuery.slug)
+      const runSQLQuery = await core40SDK.ok(
+        core40SDK.run_sql_query(createSQLQuery.slug, 'json'),
+      )
+      const exploreData = await runSQLQuery[0]['generated_content']
+      return exploreData
+    }
+  }
+
+  const vertextCloudFunction = async (
+    contents: string,
+    parameters: ModelParameters,
+  ) => {
+    const responseData = await fetch(VERTEX_AI_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify({
+        contents: contents,
+        parameters: parameters,
+      }),
+    })
+    const response = await responseData.text()
+    return response.trim()
   }
 
   return (
