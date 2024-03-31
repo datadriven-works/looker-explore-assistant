@@ -22,8 +22,8 @@
 # SOFTWARE.
 
 import os
-import json
-from flask import Flask, request
+import hmac
+from flask import Flask, request, Response
 from flask_cors import CORS
 import functions_framework
 import vertexai
@@ -36,7 +36,21 @@ logging.basicConfig(level=logging.INFO)
 # Initialize the Vertex AI
 project = os.environ.get("PROJECT")
 location = os.environ.get("REGION")
+vertex_cf_auth_token = os.environ.get("VERTEX_CF_AUTH_TOKEN")
 vertexai.init(project=project, location=location)
+
+
+def authenticate(request):
+    """Validates auth token secret set in request header"""
+    if request.method != 'POST' or 'authorization' not in request.headers:
+        return Response('Request must be POST with auth token', status=401)
+
+    expected_auth_header = 'Token token="{}"'.format(vertex_cf_auth_token)
+    submitted_auth = request.headers['authorization']
+    if hmac.compare_digest(expected_auth_header, submitted_auth):
+        return None  # Authentication successful, return None to continue processing
+
+    return Response('Incorrect token', status=403)
 
 
 def generate_looker_query(contents, parameters=None, model_name="gemini-pro"):
@@ -93,14 +107,19 @@ def create_flask_app():
         if request.method == "OPTIONS":
             return handle_options_request()
 
+         # Authenticate the request before processing
+        auth_response = authenticate(request)
+        if auth_response:
+            return auth_response  # Return the error response if authentication fails
+
         incoming_request = request.get_json()
         contents = incoming_request.get("contents")
         parameters = incoming_request.get("parameters")
         if contents is None:
             return "Missing 'contents' parameter", 400
-        
+
         response_text = generate_looker_query(contents, parameters)
-        
+
         # Set CORS headers for the actual request
         headers = {"Access-Control-Allow-Origin": "*"}
         return response_text, 200, headers
@@ -114,12 +133,17 @@ def cloud_function_entrypoint(request):
     if request.method == "OPTIONS":
         return handle_options_request()
 
+    # Authenticate the request before processing
+    auth_response = authenticate(request)
+    if auth_response:
+        return auth_response  # Return the error response if authentication fails
+
     incoming_request = request.get_json()
     contents = incoming_request.get("contents")
     parameters = incoming_request.get("parameters")
     if contents is None:
         return "Missing 'contents' parameter", 400
-        
+
     response_text = generate_looker_query(contents, parameters)
 
     # Set CORS headers for the actual request
@@ -135,6 +159,7 @@ def handle_options_request():
         "Access-Control-Max-Age": "3600"
     }
     return "", 204, headers
+
 
 # Determine the running environment and execute accordingly
 if __name__ == "__main__":
