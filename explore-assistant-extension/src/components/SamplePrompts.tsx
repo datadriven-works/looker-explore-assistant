@@ -2,9 +2,9 @@ import { Box, Card, Heading, Paragraph } from '@looker/components'
 import React from 'react'
 
 interface SamplePromptsProps {
-  handleExampleSubmit: (prompt: string) => void
+  handleSubmit: (prompt: string) => void
 }
-const SamplePrompts = ({ handleExampleSubmit }: SamplePromptsProps) => {
+const SamplePrompts = ({ handleSubmit }: SamplePromptsProps) => {
   const categorizedPrompts = [
     {
       category: 'Cohorting',
@@ -31,7 +31,7 @@ const SamplePrompts = ({ handleExampleSubmit }: SamplePromptsProps) => {
           cursor="pointer"
           key={index}
           onClick={() => {
-            handleExampleSubmit(item.prompt)
+            handleSubmit(item.prompt)
           }}
         >
           <Card border={'ui1'} fontSize={'small'} m="u1" px="u2" py="u4">

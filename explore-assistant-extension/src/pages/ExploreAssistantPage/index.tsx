@@ -1,17 +1,18 @@
 import {
   Aside,
-  Box,
   Button,
   FieldTextArea,
   Heading,
   Layout,
   Paragraph,
+  Section,
+  Space,
   Tab2,
   Tabs2,
 } from '@looker/components'
 import React, { FormEvent, useCallback, useContext, useEffect } from 'react'
 import { ExploreEmbed } from '../../components/ExploreEmbed'
-import BardLogo from '../../components/BardLogo'
+import GeminiLogo from '../../components/GeminiLogo'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 
 import examples from '../../../examples.json'
@@ -23,6 +24,7 @@ import {
   setMeasures,
   setExploreUrl,
   addToHistory,
+  setQuery,
 } from '../../slices/assistantSlice'
 import SamplePrompts from '../../components/SamplePrompts'
 import PromptHistory from '../../components/PromptHistory'
@@ -34,11 +36,10 @@ const ExploreAssistantPage = () => {
   const LOOKER_EXPLORE = process.env.LOOKER_EXPLORE || ''
 
   const dispatch = useDispatch()
-  const [query, setQuery] = React.useState<string>('')
-  const [submit, setSubmit] = React.useState<boolean>(false)
+  const [textAreaValue, setTextAreaValue] = React.useState<string>('')
   const { core40SDK, extensionSDK } = useContext(ExtensionContext)
 
-  const { exploreUrl, isQuerying, dimensions, measures } = useSelector(
+  const { exploreUrl, isQuerying, dimensions, measures, query } = useSelector(
     (state: RootState) => state.assistant,
   )
 
@@ -105,9 +106,7 @@ const ExploreAssistantPage = () => {
   }, [])
 
   const fetchData = useCallback(
-    async ({ prompt }: { prompt: string }) => {
-      const question = prompt !== undefined ? prompt : query
-
+    async (prompt: string) => {
       const contents = `
     Context
     ----------
@@ -131,12 +130,12 @@ const ExploreAssistantPage = () => {
 
     Input
     ----------
-    ${question}
+    ${prompt}
 
     Output
     ----------
 `
-
+      console.log(contents)
       const responseData = await fetch(VERTEX_AI_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -156,65 +155,38 @@ const ExploreAssistantPage = () => {
 
       dispatch(setExploreUrl(newExploreUrl))
       dispatch(setIsQuerying(false))
-      dispatch(addToHistory({ message: question, url: newExploreUrl }))
+      dispatch(addToHistory({ message: prompt, url: newExploreUrl }))
 
       //await extensionSDK.localStorageSetItem(`chat_history`, JSON.stringify(data))
     },
     [dimensions, measures],
   )
 
+  const handleSubmit = useCallback(async () => {
+    dispatch(setIsQuerying(true))
+    dispatch(setExploreUrl(''))
+    dispatch(setQuery(textAreaValue))
+    fetchData(textAreaValue)
+  }, [textAreaValue])
+
   const handleChange = (e: FormEvent<HTMLTextAreaElement>) => {
-    setQuery(e.currentTarget.value)
+    setTextAreaValue(e.currentTarget.value)
   }
 
-  /**
-   * Handles the form submission.
-   *
-   * @param prompt - The optional prompt string.
-   */
-  const handleSubmit = async (prompt: string | undefined) => {
-    data[prompt !== undefined ? prompt : query] = {
-      message: prompt !== undefined ? prompt : query,
-    }
-    await extensionSDK.localStorageSetItem(`chat_history`, JSON.stringify(data))
-    setData(data)
-    setSubmit(true)
-    fetchData(prompt, exploreData)
-  }
-
-  /**
-   * Handles the submission of an example prompt.
-   * @param {string} prompt - The prompt to submit.
-   * @returns {Promise<void>} - A promise that resolves when the submission is complete.
-   */
-  const handleExampleSubmit = async (prompt: string) => {
-    setQuery(prompt)
-    handleSubmit(prompt)
-    const elem = document.getElementById('historyScroll')
-    if (elem) {
-      elem.scrollTop = elem.scrollHeight
-    }
-  }
-
-  /**
-   * Handles the submission of a historical prompt. Doesn't issue a new network request
-   * @param {string} prompt - The prompt to submit.
-   * @returns {Promise<void>} - A promise that resolves when the submission is complete.
-   */
-  const handleHistorySubmit = async (prompt: string) => {
-    const res = await extensionSDK.localStorageGetItem(`chat_history`) //getData('chat',prompt)
-    setSubmit(true)
-    setQuery(prompt)
-    setExploreUrl(JSON.parse(res)[prompt].url)
+  
+  const handlePromptSubmit = (prompt: string) => {
+    console.log('prompt', prompt)
+    setTextAreaValue(prompt)
+    handleSubmit()
   }
 
   return (
     <>
-      <Layout hasAside={true}>
+      <Layout height={'100%'} hasAside={true}>
         <Aside
           paddingX={'u8'}
           paddingY={'u4'}
-          minWidth={'350px'}
+          minWidth={'400px'}
           borderRight={'key'}
         >
           <Heading fontSize={'xxlarge'} fontWeight={'semiBold'}>
@@ -227,39 +199,43 @@ const ExploreAssistantPage = () => {
           <FieldTextArea
             label="Type your prompt in here"
             description="💡 Tip: Try asking for your data output in a viz!"
-            value={query}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit(undefined)}
+            value={textAreaValue}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             onChange={handleChange}
+            disabled={isQuerying}
           />
           <Button
             my={'u6'}
-            disabled={submit}
-            onClick={() => handleSubmit(undefined)}
+            disabled={isQuerying}
+            onClick={() => handleSubmit()}
           >
             Run Prompt
           </Button>
-
-          <Tabs2 distributed>
-            <Tab2 id="examples" label="Sample Prompts">
-              <SamplePrompts handleExampleSubmit={handleExampleSubmit} />
-            </Tab2>
-            <Tab2 id="history" label="Your History">
-              <PromptHistory handleHistorySubmit={handleHistorySubmit} />
-            </Tab2>
-          </Tabs2>
+          <Section>
+            <Tabs2 defaultTabId="prompts" distributed>
+              <Tab2 id="prompts" label="Sample Prompts">
+                <SamplePrompts handleSubmit={handlePromptSubmit} />
+              </Tab2>
+              <Tab2 id="history" label="Your History">
+                <PromptHistory handleSubmit={handlePromptSubmit} />
+              </Tab2>
+            </Tabs2>
+          </Section>
         </Aside>
-        <Box width={'100%'}>
-          <BardLogo />
-          {isQuerying && <BardLogo />}
-          {exploreUrl && (
-            <ExploreEmbed
-              exploreUrl={exploreUrl}
-              setExploreLoading={setExploreLoading}
-              submit={submit}
-              setSubmit={setSubmit}
-            />
+        <Section height="100%">
+          {exploreUrl != '' ? (
+            <ExploreEmbed />
+          ) : (
+            <Space
+              height="100%"
+              width="100%"
+              align={'center'}
+              justify={'center'}
+            >
+              <GeminiLogo width={'300px'} animate={isQuerying} />
+            </Space>
           )}
-        </Box>
+        </Section>
       </Layout>
     </>
   )

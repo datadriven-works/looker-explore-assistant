@@ -28,33 +28,19 @@ import React, { useContext, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { LookerEmbedSDK } from '@looker/embed-sdk'
 import { ExtensionContext } from '@looker/extension-sdk-react'
-const LOOKER_EXPLORE_ID = `${process.env.LOOKER_MODEL}/${process.env.LOOKER_EXPLORE}` || ''
+import { useSelector } from 'react-redux'
+import { RootState } from '../store'
+const LOOKER_EXPLORE_ID =
+  `${process.env.LOOKER_MODEL}/${process.env.LOOKER_EXPLORE}` || ''
 
-export interface ExploreEmbedProps {
-  exploreUrl: string
-  setExploreLoading: any,
-  submit: any
-  setSubmit: any
-}
+export interface ExploreEmbedProps {}
 
-/**
- * Renders an embedded Looker explore based on the provided explore URL.
- * @param exploreUrl - The URL of the Looker explore to embed.
- * @param setExplore - A function to set the embedded explore instance.
- * @param submit - boolean for search query
- * @param setSubmit - A function to control the submit behavior of the explore.
- * @returns The ExploreEmbed component.
- */
-export const ExploreEmbed = ({
-  exploreUrl,
-  setExploreLoading,
-  submit,
-  setSubmit,
-}: ExploreEmbedProps) => {
+export const ExploreEmbed = ({}: ExploreEmbedProps) => {
   const { extensionSDK } = useContext(ExtensionContext)
   const [exploreRunStart, setExploreRunStart] = React.useState(false)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { exploreUrl } = useSelector((state: RootState) => state.assistant)
+
   const canceller = (event: any) => {
     return { cancel: !event.modal }
   }
@@ -62,12 +48,15 @@ export const ExploreEmbed = ({
   const ref = useRef<HTMLDivElement>(null)
 
   const handleQueryError = () => {
-    setTimeout(() => !exploreRunStart && animateExploreLoad(),10)
+    setTimeout(() => !exploreRunStart && animateExploreLoad(), 10)
   }
 
   const animateExploreLoad = () => {
-    setSubmit(false)
     document.getElementById('embedcontainer')?.style.setProperty('opacity', '1')
+  }
+
+  const setExploreLoading = (explore: any) => {
+    console.log(explore)
   }
 
   useEffect(() => {
@@ -92,7 +81,7 @@ export const ExploreEmbed = ({
         .appendTo(el)
         .withClassName('looker-embed')
         .withParams(paramsObj)
-        .on('explore:ready',() => handleQueryError())
+        .on('explore:ready', () => handleQueryError())
         .on('drillmenu:click', canceller)
         .on('drillmodal:explore', canceller)
         .on('explore:run:start', () => {
@@ -114,22 +103,20 @@ export const ExploreEmbed = ({
 
   return (
     <>
-    <div style={{position:'absolute', display:'flex', flexDirection:'column', alignItems:'center',justifyContent:'center',width:'100%',height:'100%',backgroundColor:'rgb(214, 206, 195,0.4)',zIndex:submit ? 1 : -1}}>
-    </div>
-    <EmbedContainer id="embedcontainer" ref={ref} submit/>
+      <EmbedContainer id="embedcontainer" ref={ref} />
     </>
   )
 }
 
-const EmbedContainer = styled.div<{ submit: boolean}>`
+const EmbedContainer = styled.div<{}>`
   backgroundcolor: #f7f7f7;
+  width: 100%;
   height: 100%;
-  opacity: ${props => props.submit === true ? 0.2 : 1};
   animation: fadeIn ease-in ease-out 3s;
   > iframe {
+    width: 100%;
+    height: 100%;
     display: block;
     backgroundcolor: #f7f7f7;
-    height: 100%;
-    width: 100%;
   }
 `

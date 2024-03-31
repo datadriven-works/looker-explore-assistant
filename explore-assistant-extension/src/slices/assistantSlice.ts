@@ -18,6 +18,7 @@ interface AssistantState {
   dimensions: Field[]
   measures: Field[]
   exploreUrl: string
+  query: string
 }
 
 const initialState: AssistantState = {
@@ -26,6 +27,7 @@ const initialState: AssistantState = {
   dimensions: [],
   measures: [],
   exploreUrl: '',
+  query: '',
 }
 
 export const assistantSlice = createSlice({
@@ -50,9 +52,12 @@ export const assistantSlice = createSlice({
     setExploreUrl: (state, action: PayloadAction<string>) => {
       state.exploreUrl = action.payload
     },
+    setQuery: (state, action: PayloadAction<string>) => {
+      state.query = action.payload
+    },
   },
 })
 
-export const { setIsQuerying, addToHistory, setHistory, setDimensions, setMeasures, setExploreUrl } = assistantSlice.actions
+export const { setIsQuerying, addToHistory, setHistory, setDimensions, setMeasures, setExploreUrl, setQuery } = assistantSlice.actions
 
 export default assistantSlice.reducer
