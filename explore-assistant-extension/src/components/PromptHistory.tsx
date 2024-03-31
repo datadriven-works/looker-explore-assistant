@@ -8,10 +8,11 @@ interface PromptHistoryProps {
 }
 const PromptHistory = ({ handleSubmit }: PromptHistoryProps) => {
   const { history } = useSelector((state: RootState) => state.assistant)
+
   return (
     <Section scrollWithin>
       <SpaceVertical gap="u2">
-        {history.map((item: any, index: number) => {
+        {Object.values(history).reverse().map((item: any, index: number) => {
           return (
             <Card
               width={'100%'}

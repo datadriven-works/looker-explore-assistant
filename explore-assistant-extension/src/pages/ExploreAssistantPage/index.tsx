@@ -38,7 +38,7 @@ const ExploreAssistantPage = () => {
   const [textAreaValue, setTextAreaValue] = React.useState<string>('')
   const { core40SDK, extensionSDK } = useContext(ExtensionContext)
 
-  const { exploreUrl, isQuerying, dimensions, measures } = useSelector(
+  const { exploreUrl, isQuerying, dimensions, measures, history } = useSelector(
     (state: RootState) => state.assistant,
   )
 
@@ -49,7 +49,7 @@ const ExploreAssistantPage = () => {
         return
       }
       const data = JSON.parse(responses)
-      const history = []
+      const localStorageHistory = []
       for (const [key, value] of Object.entries(data)) {
         if (key == '' || typeof value != 'object' || value == null) {
           continue
@@ -57,12 +57,12 @@ const ExploreAssistantPage = () => {
         if (value['url'] == undefined || value['message'] == undefined) {
           continue
         }
-        history.push({
+        localStorageHistory.push({
           message: value['message'],
           url: value['url'],
         })
       }
-      dispatch(setHistory(history))
+      dispatch(setHistory(localStorageHistory))
     })
   }, [])
 
@@ -171,9 +171,11 @@ const ExploreAssistantPage = () => {
 
       dispatch(setExploreUrl(newExploreUrl))
       dispatch(setIsQuerying(false))
-      dispatch(addToHistory({ message: prompt, url: newExploreUrl }))
 
-      //await extensionSDK.localStorageSetItem(`chat_history`, JSON.stringify(data))
+      const newHistoryItem = { message: prompt, url: newExploreUrl }
+      dispatch(addToHistory(newHistoryItem))
+      const updatedHistory = [...history, newHistoryItem]
+      await extensionSDK.localStorageSetItem(`chat_history`, JSON.stringify(updatedHistory))
     },
     [dimensions, measures],
   )

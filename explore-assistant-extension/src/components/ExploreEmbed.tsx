@@ -55,9 +55,7 @@ export const ExploreEmbed = ({}: ExploreEmbedProps) => {
     document.getElementById('embedcontainer')?.style.setProperty('opacity', '1')
   }
 
-  const setExploreLoading = (explore: any) => {
-    console.log(explore)
-  }
+  const setExploreLoading = (_explore: any) => {}
 
   useEffect(() => {
     const hostUrl = extensionSDK?.lookerHostData?.hostUrl
