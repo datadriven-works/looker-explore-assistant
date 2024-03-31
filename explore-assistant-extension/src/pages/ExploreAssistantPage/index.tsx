@@ -68,8 +68,8 @@ const ExploreAssistantPage = () => {
   const LOOKER_EXPLORE = process.env.LOOKER_EXPLORE || ''
 
   const VERTEX_AI_ENDPOINT = process.env.VERTEX_AI_ENDPOINT || ''
-  const VERTEX_BIGQUERY_LOOKER_MODEL =
-    process.env.VERTEX_BIGQUERY_LOOKER_MODEL || ''
+  const VERTEX_BIGQUERY_LOOKER_CONNECTION_NAME =
+    process.env.VERTEX_BIGQUERY_LOOKER_CONNECTION_NAME || ''
   const VERTEX_BIGQUERY_MODEL_ID = process.env.VERTEX_BIGQUERY_MODEL_ID || ''
 
   const dispatch = useDispatch()
@@ -204,7 +204,7 @@ const ExploreAssistantPage = () => {
         response = await vertextCloudFunction(contents, parameters)
       }
 
-      if (VERTEX_BIGQUERY_LOOKER_MODEL && VERTEX_BIGQUERY_MODEL_ID) {
+      if (VERTEX_BIGQUERY_LOOKER_CONNECTION_NAME && VERTEX_BIGQUERY_MODEL_ID) {
         response = await vertextBigQuery(contents, parameters)
       }
 
@@ -243,7 +243,7 @@ const ExploreAssistantPage = () => {
   ) => {
     const createSQLQuery = await core40SDK.ok(
       core40SDK.create_sql_query({
-        connection_name: 'bigquery_data_driven_llm',
+        connection_name: VERTEX_BIGQUERY_LOOKER_CONNECTION_NAME,
         sql: generateSQL(VERTEX_BIGQUERY_MODEL_ID, contents, parameters),
       }),
     )
