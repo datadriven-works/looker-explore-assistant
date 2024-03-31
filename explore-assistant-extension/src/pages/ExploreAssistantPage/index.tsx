@@ -67,7 +67,11 @@ const ExploreAssistantPage = () => {
   const LOOKER_MODEL = process.env.LOOKER_MODEL || ''
   const LOOKER_EXPLORE = process.env.LOOKER_EXPLORE || ''
 
+  // cloud function
   const VERTEX_AI_ENDPOINT = process.env.VERTEX_AI_ENDPOINT || ''
+  const VERTEX_CF_AUTH_TOKEN = process.env.VERTEX_CF_AUTH_TOKEN || ''
+
+  // bigquery
   const VERTEX_BIGQUERY_LOOKER_CONNECTION_NAME =
     process.env.VERTEX_BIGQUERY_LOOKER_CONNECTION_NAME || ''
   const VERTEX_BIGQUERY_MODEL_ID = process.env.VERTEX_BIGQUERY_MODEL_ID || ''
@@ -265,6 +269,7 @@ const ExploreAssistantPage = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Token token="${VERTEX_CF_AUTH_TOKEN}"`
       },
 
       body: JSON.stringify({

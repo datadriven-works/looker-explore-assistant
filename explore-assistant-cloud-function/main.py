@@ -39,6 +39,12 @@ location = os.environ.get("REGION")
 vertex_cf_auth_token = os.environ.get("VERTEX_CF_AUTH_TOKEN")
 vertexai.init(project=project, location=location)
 
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+}
+
 
 def authenticate(request):
     """Validates auth token secret set in request header"""
@@ -120,9 +126,7 @@ def create_flask_app():
 
         response_text = generate_looker_query(contents, parameters)
 
-        # Set CORS headers for the actual request
-        headers = {"Access-Control-Allow-Origin": "*"}
-        return response_text, 200, headers
+        return response_text, 200, CORS_HEADERS
 
     return app
 
@@ -146,19 +150,15 @@ def cloud_function_entrypoint(request):
 
     response_text = generate_looker_query(contents, parameters)
 
-    # Set CORS headers for the actual request
-    headers = {"Access-Control-Allow-Origin": "*"}
-    return response_text, 200, headers
+    return response_text, 200, CORS_HEADERS
 
 
 def handle_options_request():
     headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Max-Age": "3600"
     }
-    return "", 204, headers
+    merged_headers = {**CORS_HEADERS, **headers}
+    return "", 204, merged_headers
 
 
 # Determine the running environment and execute accordingly
