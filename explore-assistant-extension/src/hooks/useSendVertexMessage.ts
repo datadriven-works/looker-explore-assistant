@@ -90,7 +90,11 @@ const useSendVertexMessage = () => {
         core40SDK.run_sql_query(createSQLQuery.slug, 'json'),
       )
       const exploreData = await runSQLQuery[0]['generated_content']
-      return exploreData
+
+      // clean up the data by removing backticks
+      const cleanExploreData = exploreData.replace(/```json/g, '').replace(/```/g, '').trim()
+
+      return cleanExploreData
     }
   }
 
