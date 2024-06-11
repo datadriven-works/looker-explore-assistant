@@ -25,7 +25,7 @@ This section describes how to set up the LLM Integration for the Explore Assista
 2. Install a backend using terraform by [following the instructions](../explore-assistant-backend/README.md)
 
 3. Save the backend details for use by the extension framework:
-   
+
    * The BigQuery example dataset and table name
    * If you're using the BigQuery backend, the model id that allows communication with Gemini
    * If you're using the Cloud Function backend, the url of the endpoint
@@ -38,7 +38,7 @@ Please see [Google Cloud's docs](https://cloud.google.com/logging/docs/export/co
 (resource.type = "cloud_function"
 resource.labels.function_name = "Insert service name"
 resource.labels.region = "<Insert location>")
- OR 
+ OR
 (resource.type = "cloud_run_revision"
 resource.labels.service_name = "<Insert service name>"
 resource.labels.location = "<Insert location>")
@@ -124,7 +124,7 @@ jsonPayload.component="explore-assistant-metadata"
 
    1. In your copy of the extension project you have a `manifest.lkml` file.
 
-   You can either drag & upload this file into your Looker project, or create a `manifest.lkml` with the same content. Change the `id`, `label`, or `url` as needed. 
+   You can either drag & upload this file into your Looker project, or create a `manifest.lkml` with the same content. Change the `id`, `label`, or `url` as needed.
    **IMPORTANT** please paste in the deployed Cloud Function URL into the `external_api_urls` list and uncomment that line if you are using the Cloud Function backend deployment. This will allowlist it in Looker for fetch requests.
 
    ```lookml
@@ -170,5 +170,19 @@ The process above requires your local development server to be running to load t
 1. Modify your `manifest.lkml` to use `file` instead of `url` and point it at the `bundle.js` file.
 
 Note that the additional JavaScript files generated during the production build process do not have to be mentioned in the manifest. These files will be loaded dynamically by the extension as and when they are needed. Note that to utilize code splitting, the Looker server must be at version 7.21 or above.
+
+### Set up extension user permissions
+
+The extension requires the `see_lookml` and `use_sql_runner` permissions to be enabled for the role of the user. You can set up the permissions by following the steps below:
+
+1. Navigate to `[your looker url]/admin/roles` and either create a new role or a new permission set and assign it to the role you want to enable the extension for. You'll need to add `see_lookml` and `use_sql_runner` permissions to this permission set.
+
+2. Create a new `.model` file in your Looker project and add the following code to it:
+
+```lookml
+connection: "[your_examples_database_connection_name]"
+```
+
+Note: this is the same connection that you used in the `VERTEX_BIGQUERY_LOOKER_CONNECTION_NAME` environment variable in the `.env` file for the extension project.
 
 ---
