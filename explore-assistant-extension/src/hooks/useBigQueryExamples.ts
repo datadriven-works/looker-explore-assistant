@@ -17,7 +17,7 @@ export const useBigQueryExamples = () => {
     process.env.BIGQUERY_EXAMPLE_PROMPTS_DATASET_NAME || 'explore_assistant'
 
   const dispatch = useDispatch()
-  const { showBoundary } = useErrorBoundary();
+  const { showBoundary } = useErrorBoundary()
 
   const { core40SDK } = useContext(ExtensionContext)
 
@@ -28,17 +28,17 @@ export const useBigQueryExamples = () => {
           connection_name: connectionName,
           sql: sql,
         }),
+      )
+      const { slug } = await createSqlQuery
+      if (slug) {
+        const runSQLQuery = await core40SDK.ok(
+          core40SDK.run_sql_query(slug, 'json'),
         )
-        const { slug } = await createSqlQuery
-        if (slug) {
-          const runSQLQuery = await core40SDK.ok(
-            core40SDK.run_sql_query(slug, 'json'),
-            )
-            const examples = await runSQLQuery
-            return examples
-          }
-          return []
-    } catch(error) {
+        const examples = await runSQLQuery
+        return examples
+      }
+      return []
+    } catch (error) {
       showBoundary(error)
       throw new Error('error')
     }
@@ -48,8 +48,7 @@ export const useBigQueryExamples = () => {
     if (!process.env.BIGQUERY_EXAMPLE_PROMPTS_CONNECTION_NAME) {
       const generationExamples = require('../../../explore-assistant-examples/examples.json')
       return dispatch(setExploreGenerationExamples(generationExamples))
-    }
-    else {
+    } else {
       const sql = `
       SELECT
           examples
@@ -57,18 +56,20 @@ export const useBigQueryExamples = () => {
         \`${datasetName}.explore_assistant_examples\`
         WHERE explore_id = '${LOOKER_MODEL}:${LOOKER_EXPLORE}'
     `
-    return runExampleQuery(sql).then((response) => {
-      const generationExamples = JSON.parse(response[0]['examples'])
-      dispatch(setExploreGenerationExamples(generationExamples))
-    }).catch((error) => showBoundary(error))
+      return runExampleQuery(sql)
+        .then((response) => {
+          const generationExamples = JSON.parse(response[0]['examples'])
+          dispatch(setExploreGenerationExamples(generationExamples))
+        })
+        .catch((error) => showBoundary(error))
+    }
   }
 
   const getRefinementPrompts = async () => {
     if (!process.env.BIGQUERY_EXAMPLE_PROMPTS_CONNECTION_NAME) {
       const refinementExamples = require('../../../explore-assistant-examples/refinement_examples.json')
       return dispatch(setExploreRefinementExamples(refinementExamples))
-    }
-    else {
+    } else {
       const sql = `
     SELECT
         examples
@@ -76,16 +77,18 @@ export const useBigQueryExamples = () => {
       \`${datasetName}.explore_assistant_refinement_examples\`
       WHERE explore_id = '${LOOKER_MODEL}:${LOOKER_EXPLORE}'
   `
-    return runExampleQuery(sql).then((response) => {
-      const refinementExamples = JSON.parse(response[0]['examples'])
-      dispatch(setExploreRefinementExamples(refinementExamples))
-    }).catch((error) => showBoundary(error))
+      return runExampleQuery(sql)
+        .then((response) => {
+          const refinementExamples = JSON.parse(response[0]['examples'])
+          dispatch(setExploreRefinementExamples(refinementExamples))
+        })
+        .catch((error) => showBoundary(error))
+    }
   }
 
   // get the example prompts
   useEffect(() => {
-      getExamplePrompts()
-      getRefinementPrompts()
+    getExamplePrompts()
+    getRefinementPrompts()
   }, [showBoundary])
 }
-
