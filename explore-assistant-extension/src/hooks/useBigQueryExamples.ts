@@ -6,7 +6,6 @@ import {
 } from '../slices/assistantSlice'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 import process from 'process'
-import { useErrorBoundary } from 'react-error-boundary'
 
 export const useBigQueryExamples = () => {
   const connectionName =
@@ -17,31 +16,25 @@ export const useBigQueryExamples = () => {
     process.env.BIGQUERY_EXAMPLE_PROMPTS_DATASET_NAME || 'explore_assistant'
 
   const dispatch = useDispatch()
-  const { showBoundary } = useErrorBoundary();
 
   const { core40SDK } = useContext(ExtensionContext)
 
   const runExampleQuery = async (sql: string) => {
-    try {
-      const createSqlQuery = await core40SDK.ok(
-        core40SDK.create_sql_query({
-          connection_name: connectionName,
-          sql: sql,
-        }),
-        )
-        const { slug } = await createSqlQuery
-        if (slug) {
-          const runSQLQuery = await core40SDK.ok(
-            core40SDK.run_sql_query(slug, 'json'),
-            )
-            const examples = await runSQLQuery
-            return examples
-          }
-          return []
-    } catch(error) {
-      showBoundary(error)
-      throw new Error('error')
+    const createSqlQuery = await core40SDK.ok(
+      core40SDK.create_sql_query({
+        connection_name: connectionName,
+        sql: sql,
+      }),
+    )
+    const { slug } = await createSqlQuery
+    if (slug) {
+      const runSQLQuery = await core40SDK.ok(
+        core40SDK.run_sql_query(slug, 'json'),
+      )
+      const examples = await runSQLQuery
+      return examples
     }
+    return []
   }
 
   const getExamplePrompts = async () => {
@@ -57,10 +50,11 @@ export const useBigQueryExamples = () => {
         \`${datasetName}.explore_assistant_examples\`
         WHERE explore_id = '${LOOKER_MODEL}:${LOOKER_EXPLORE}'
     `
-    return runExampleQuery(sql).then((response) => {
-      const generationExamples = JSON.parse(response[0]['examples'])
-      dispatch(setExploreGenerationExamples(generationExamples))
-    }).catch((error) => showBoundary(error))
+      return runExampleQuery(sql).then((response) => {
+        const generationExamples = JSON.parse(response[0]['examples'])
+        dispatch(setExploreGenerationExamples(generationExamples))
+      })
+    }
   }
 
   const getRefinementPrompts = async () => {
@@ -76,16 +70,17 @@ export const useBigQueryExamples = () => {
       \`${datasetName}.explore_assistant_refinement_examples\`
       WHERE explore_id = '${LOOKER_MODEL}:${LOOKER_EXPLORE}'
   `
-    return runExampleQuery(sql).then((response) => {
-      const refinementExamples = JSON.parse(response[0]['examples'])
-      dispatch(setExploreRefinementExamples(refinementExamples))
-    }).catch((error) => showBoundary(error))
+      return runExampleQuery(sql).then((response) => {
+        const refinementExamples = JSON.parse(response[0]['examples'])
+        dispatch(setExploreRefinementExamples(refinementExamples))
+      })
+    }
   }
 
   // get the example prompts
   useEffect(() => {
-      getExamplePrompts()
-      getRefinementPrompts()
-  }, [showBoundary])
+    getExamplePrompts()
+    getRefinementPrompts()
+  }, [])
 }
 
