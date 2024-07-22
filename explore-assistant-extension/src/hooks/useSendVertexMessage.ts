@@ -320,6 +320,7 @@ ${exploreRefinementExamples
 
   const generateExploreUrl = useCallback(
     async (prompt: string) => {
+      const currentDateTime = new Date().toISOString();
       const contents = `
         Context
         ----------
@@ -334,7 +335,8 @@ ${exploreRefinementExamples
           - try to avoid adding dynamic_fields, provide them when very similar example is found in the bottom
           - never respond with sql, always return an looker explore url as a single string
           - response should start with fields= , as in the Examples section at the bottom  
-    
+          - Always use the provided current date (${currentDateTime}) when generating Looker URL queries that involve TIMEFRAMES.  
+          - For all questions involving time periods (e.g., last month, this year, this month, etc.) make sure you take into consideration todays date
         LookML Metadata
         ----------
     
@@ -345,7 +347,10 @@ ${exploreRefinementExamples
         Measures are used to perform calculations (if top, bottom, total, sum, etc. are used include a measure):
       
       ${measures.map(formatContent).join('\n')}
-    
+
+        Examples Below are taken at a different date. so ALL DATE RANGES ARE WRONG COMPARING TO CURREN DATES.
+        (BE CAREFUL WITH DATES, DO NOT OUTPUT THE Examples 1:1,  as changes could happen with timeframes and date ranges)
+
         Example
         ----------
     
