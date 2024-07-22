@@ -24,97 +24,133 @@ SOFTWARE.
 
 */
 
-import React, { useContext, useRef, useEffect } from 'react'
-import styled from 'styled-components'
-import { LookerEmbedSDK } from '@looker/embed-sdk'
-import { ExtensionContext } from '@looker/extension-sdk-react'
-import { useSelector } from 'react-redux'
-import { RootState } from '../store'
+
+import React, { useContext, useRef, useEffect } from 'react';
+import styled from 'styled-components';
+import { LookerEmbedSDK } from '@looker/embed-sdk';
+import { ExtensionContext } from '@looker/extension-sdk-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 export interface ExploreEmbedProps {}
 
+const processUrlParams = (exploreUrl: string): { [key: string]: string } => {
+  const paramsObj: { [key: string]: string } = {};
+
+  exploreUrl.split('&').forEach(param => {
+    let decodedKey;
+    let decodedValue;
+    try {
+      const [key, ...rest] = param.split('=');
+      decodedKey = decodeURIComponent(key);
+      decodedValue = decodeURIComponent(rest.join('=')).replace(/\+/g, ' ');
+    } catch (e) {
+      console.error('Error decoding URL parameter segment:', param);
+      return;
+    }
+
+    // Handle JSON objects directly as strings
+    if ((decodedValue.startsWith('{') && decodedValue.endsWith('}')) || 
+        (decodedValue.startsWith('[') && decodedValue.endsWith(']'))) {
+      paramsObj[decodedKey] = decodedValue;
+    } else {
+      paramsObj[decodedKey] = decodedValue;
+    }
+  });
+
+  return paramsObj;
+};
+
 export const ExploreEmbed = ({}: ExploreEmbedProps) => {
-  const { extensionSDK } = useContext(ExtensionContext)
-  const [exploreRunStart, setExploreRunStart] = React.useState(false)
+  const { extensionSDK } = useContext(ExtensionContext);
+  const [exploreRunStart, setExploreRunStart] = React.useState(false);
 
   const { exploreUrl, exploreId } = useSelector(
     (state: RootState) => state.assistant,
-  )
+  );
 
   const canceller = (event: any) => {
-    return { cancel: !event.modal }
-  }
+    return { cancel: !event.modal };
+  };
 
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLDivElement>(null);
 
   const handleQueryError = () => {
-    setTimeout(() => !exploreRunStart && animateExploreLoad(), 10)
-  }
+    setTimeout(() => !exploreRunStart && animateExploreLoad(), 10);
+  };
 
   const animateExploreLoad = () => {
-    document.getElementById('embedcontainer')?.style.setProperty('opacity', '1')
-  }
+    document.getElementById('embedcontainer')?.style.setProperty('opacity', '1');
+  };
 
-  const setExploreLoading = (_explore: any) => {}
+  const setExploreLoading = (_explore: any) => {};
 
   useEffect(() => {
-    const hostUrl = extensionSDK?.lookerHostData?.hostUrl
-    const el = ref.current
+    const hostUrl = extensionSDK?.lookerHostData?.hostUrl;
+    const el = ref.current;
     if (el && hostUrl && exploreUrl) {
-      const paramsObj: any = {
-        // For Looker Original use window.origin for Looker Core use hostUrl
-        embed_domain: hostUrl, //window.origin, //hostUrl,
+      const paramsObj = {
+        embed_domain: hostUrl,
         sdk: '2',
         _theme: JSON.stringify({
           key_color: '#174ea6',
           background_color: '#f4f6fa',
         }),
-      }
-      exploreUrl.split('&').map((param) => {
-        const [key, ...rest] = param.split('=')
-        // paramsObj[key] = rest.join('=')
-        if (key === 'filter_expression' || key === 'dynamic_fields') {
-          // console.log('rest', rest)
-          paramsObj[key] = rest.join('=')
-        } else {
-          paramsObj[key] = param.split('=')[1]
+      };
+
+      console.log('exploreUrl before decoding:', exploreUrl);
+
+      const decodedParams = processUrlParams(exploreUrl);
+      console.log('Decoded params:', decodedParams);
+
+      // Ensure specific fields are left as decoded without re-encoding
+      const finalParams: { [key: string]: string } = {};
+      for (const key in decodedParams) {
+        if (decodedParams.hasOwnProperty(key)) {
+          if (key.includes('filter_config') || key.includes('vis') || key.includes('fields') 
+              || key.startsWith('f[')) {
+            finalParams[key] = decodedParams[key]; // Do not re-encode JSON params, fields, or filters
+          } else {
+            finalParams[key] = encodeURIComponent(decodedParams[key]).replace(/%20/g, ' ');
+          }
         }
-      })
-      el.innerHTML = ''
-      LookerEmbedSDK.init(hostUrl)
+      }
+      console.log('Final processed params:', finalParams);
+
+      el.innerHTML = '';
+      LookerEmbedSDK.init(hostUrl);
       LookerEmbedSDK.createExploreWithId(exploreId)
         .appendTo(el)
         .withClassName('looker-embed')
-        .withParams(paramsObj)
-        .on('explore:ready', () => handleQueryError())
+        .withParams(finalParams)
+        .on('explore:ready', handleQueryError)
         .on('drillmenu:click', canceller)
         .on('drillmodal:explore', canceller)
         .on('explore:run:start', () => {
-          setExploreRunStart(true)
-          animateExploreLoad()
+          setExploreRunStart(true);
+          animateExploreLoad();
         })
         .on('explore:run:complete', () => setExploreRunStart(false))
         .build()
         .connect()
         .then((explore) => setExploreLoading(explore))
         .catch((error: Error) => {
-          // @TODO - This should probably throw a visible error
-          // eslint-disable-next-line no-console
-          console.error('Connection error', error)
-        })
+          console.error('Connection error', error);
+          // Additional debug information on error
+          console.error('Params Obj on Connection Error:', finalParams);
+        });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exploreUrl])
+  }, [exploreUrl]);
 
   return (
     <>
       <EmbedContainer id="embedcontainer" ref={ref} />
     </>
-  )
-}
+  );
+};
 
 const EmbedContainer = styled.div<{}>`
-  backgroundcolor: #f7f7f7;
+  background-color: #f7f7f7;
   width: 100%;
   height: 100%;
   animation: fadeIn ease-in ease-out 3s;
@@ -122,6 +158,6 @@ const EmbedContainer = styled.div<{}>`
     width: 100%;
     height: 100%;
     display: block;
-    backgroundcolor: #f7f7f7;
+    background-color: #f7f7f7;
   }
-`
+`;
