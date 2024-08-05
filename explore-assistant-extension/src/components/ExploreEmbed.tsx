@@ -35,6 +35,34 @@ export interface ExploreEmbedProps {
   exploreUrl: string
 }
 
+const processUrlParams = (exploreUrl: string): { [key: string]: string } => {
+  const paramsObj: { [key: string]: string } = {};
+
+  exploreUrl.split('&').forEach(param => {
+    let decodedKey;
+    let decodedValue;
+    try {
+      const [key, ...rest] = param.split('=');
+      decodedKey = decodeURIComponent(key);
+      decodedValue = decodeURIComponent(rest.join('=')).replace(/\+/g, ' ');
+    } catch (e) {
+      console.error('Error decoding URL parameter segment:', param);
+      return;
+    }
+
+    // Handle JSON objects directly as strings
+    if ((decodedValue.startsWith('{') && decodedValue.endsWith('}')) || 
+        (decodedValue.startsWith('[') && decodedValue.endsWith(']'))) {
+      paramsObj[decodedKey] = decodedValue;
+    } else {
+      paramsObj[decodedKey] = decodedValue;
+    }
+  });
+
+  return paramsObj;
+};
+
+
 export const ExploreEmbed = ({ exploreUrl }: ExploreEmbedProps) => {
   const { extensionSDK } = useContext(ExtensionContext)
   const [exploreRunStart, setExploreRunStart] = React.useState(false)
@@ -61,7 +89,7 @@ export const ExploreEmbed = ({ exploreUrl }: ExploreEmbedProps) => {
     const hostUrl = extensionSDK?.lookerHostData?.hostUrl
     const el = ref.current
     if (el && hostUrl && exploreUrl) {
-      const paramsObj: any = {
+      const baseParamsObj: { [key: string]: string } = {
         // For Looker Original use window.origin for Looker Core use hostUrl
         embed_domain: hostUrl, //window.origin, //hostUrl,
         sdk: '2',
@@ -70,16 +98,14 @@ export const ExploreEmbed = ({ exploreUrl }: ExploreEmbedProps) => {
           background_color: '#f4f6fa',
         }),
       }
-      exploreUrl.split('&').map((param) => {
-        const [key, ...rest] = param.split('=')
-        // paramsObj[key] = rest.join('=')
-        if (key === 'filter_expression' || key === 'dynamic_fields') {
-          // console.log('rest', rest)
-          paramsObj[key] = rest.join('=')
-        } else {
-          paramsObj[key] = param.split('=')[1]
-        }
-      })
+
+      const decodedParams = processUrlParams(exploreUrl);
+
+      const paramsObj: { [key: string]: string } = {
+        ...baseParamsObj,
+        ...decodedParams,
+      };
+
       el.innerHTML = ''
       LookerEmbedSDK.init(hostUrl)
       LookerEmbedSDK.createExploreWithId(exploreId)
