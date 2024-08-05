@@ -32,7 +32,9 @@ import { ExtensionContext } from '@looker/extension-sdk-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 
-export interface ExploreEmbedProps {}
+export interface ExploreEmbedProps {
+  exploreUrl: string
+}
 
 const processUrlParams = (exploreUrl: string): { [key: string]: string } => {
   const paramsObj: { [key: string]: string } = {};
