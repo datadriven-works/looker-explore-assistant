@@ -53,7 +53,7 @@ export const useBigQueryExamples = () => {
         WHERE explore_id = '${LOOKER_MODEL}:${LOOKER_EXPLORE}'
     `
     return runExampleQuery(sql).then((response) => {
-      const generationExamples = JSON.parse(response[0]['examples'])
+      const generationExamples = JSON.parse(response[0]?.['examples'] ?? '[]')
       dispatch(setExploreGenerationExamples(generationExamples))
     }).catch((error) => showBoundary(error))
   }
@@ -67,7 +67,7 @@ export const useBigQueryExamples = () => {
       WHERE explore_id = '${LOOKER_MODEL}:${LOOKER_EXPLORE}'
   `
     return runExampleQuery(sql).then((response) => {
-      const refinementExamples = JSON.parse(response[0]['examples'])
+      const refinementExamples = JSON.parse(response[0]?.['examples'] ?? '[]')
       dispatch(setExploreRefinementExamples(refinementExamples))
     }).catch((error) => showBoundary(error))
   }

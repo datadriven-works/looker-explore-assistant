@@ -42,7 +42,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       aria-labelledby="settings-modal-title"
       className="flex items-center justify-center"
     >
-      <Box className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <Box className="bg-settings-primary rounded-lg p-6 max-w-md w-full mx-4">
         <Typography
           id="settings-modal-title"
           variant="h6"

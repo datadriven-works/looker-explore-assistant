@@ -42,7 +42,7 @@ export const ExploreEmbed = ({ exploreParams }: ExploreEmbedProps) => {
   const { extensionSDK } = useContext(ExtensionContext)
   const [exploreRunStart, setExploreRunStart] = React.useState(false)
 
-  const { exploreId, settings } = useSelector((state: RootState) => state.assistant)
+  const { exploreId, settings, theme } = useSelector((state: RootState) => state.assistant)
 
   const canceller = (event: any) => {
     return { cancel: !event.modal }
@@ -69,10 +69,11 @@ export const ExploreEmbed = ({ exploreParams }: ExploreEmbedProps) => {
         // For Looker Original use window.origin for Looker Core use hostUrl
         embed_domain: hostUrl, //window.origin, //hostUrl,
         sdk: '2',
-        _theme: JSON.stringify({
-          key_color: '#174ea6',
-          background_color: '#f4f6fa',
-        }),
+        theme:theme === 'dark' ? 'Starterkit_Dark_Mode' : 'Looker',
+        // _theme: JSON.stringify({
+        //   key_color: '#174ea6',
+        //   background_color: '#f4f6fa',
+        // }),
         toggle: 'pik,vis,dat',
       }
 
@@ -112,7 +113,7 @@ export const ExploreEmbed = ({ exploreParams }: ExploreEmbedProps) => {
         })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exploreParams])
+  }, [exploreParams, theme])
 
   if (!exploreParams || Object.keys(exploreParams).length === 0) {
     return <></>

@@ -34,8 +34,8 @@ const PromptInput = () => {
     }
   }
   return (
-    <div className="max-w-3xl mx-auto px-8 pt-4 pb-2 bg-white bg-opacity-80 rounded-md">
-      <div className="relative flex items-center bg-[rgb(240,244,249)] rounded-full p-2">
+    <div className="max-w-3xl mx-auto px-8 pt-4 pb-2 bg-prompt-primary bg-opacity-80 rounded-md">
+      <div className="relative flex items-center bg-prompt-secondary rounded-full p-2">
         <input
           ref={inputRef}
           type="text"

@@ -8,17 +8,25 @@ module.exports = {
       fontFamily: {
         sans: ['Google Sans', ...defaultTheme.fontFamily.sans],
       },
+      backgroundImage: {
+        // 'radial-gradient': "var(--chat-secondary-color)",
+      },
       colors: {
-        primary: '#1a73e8', // Google Blue
-        secondary: '#ea4335', // Google Red
-        tertiary: '#fbbc05', // Google Yellow
-        quaternary: '#34a853', // Google Green
+        primary: "var(--primary-color)", // Google Blue
+        secondary: "var(--secondary-color)", // Google Red
+        tertiary: "var(--tertiary-color)", // Google Yellow
+        quaternary: "var(--quaternary-color)", // Google Green
+        chat: "var(--chat-color)",
+        'radial-gradient': "var(--chat-secondary-color)",
         gray: {
           ...defaultTheme.colors.gray,
-          900: '#202124', // Google Dark Gray
-          800: '#303134', // Google Lighter Dark Gray
-          700: '#5f6368', // Google Medium Gray
+          900: 'var(--text-primary-color)', 
+          800: 'var(--text-secondary-color)',
+          700: 'var(--text-tertiary-color)',
         },
+        'prompt-primary': 'var(--prompt-primary-color)',
+        'prompt-secondary': 'var(--prompt-secondary-color)',
+        'settings-primary': 'var(--settings-primary-color)'
       },
     },
   },

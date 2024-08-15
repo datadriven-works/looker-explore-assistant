@@ -76,15 +76,15 @@ const Message = ({ message, actor, children }: MessageProps) => (
   <div
     className={`flex ${
       actor === 'user' ? 'justify-end' : 'justify-start'
-    } mb-4`}
+    } mb-4` }
   >
     <div className={`max-w-[70%] ${actor === 'user' ? 'order-2' : 'order-1'}`}>
       <div
         className={clsx(
           'rounded-lg p-3 max-w-xl',
           actor === 'user'
-            ? 'bg-[rgb(237,243,253)] text-gray-800'
-            : 'bg-[rgb(242,242,242)] text-gray-800',
+            ? 'bg-radial-gradient text-gray-800'
+            : 'bg-radial-gradient text-gray-800',
         )}
       >
         {message && <MarkdownText text={message} />}

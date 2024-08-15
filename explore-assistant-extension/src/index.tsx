@@ -35,6 +35,7 @@ import { Spinner } from '@looker/components'
 import { ErrorBoundary } from 'react-error-boundary'
 import Fallback from './components/Error/ErrorFallback'
 import { ComponentsProvider } from '@looker/components'
+import './global.css'
 
 const getRoot = () => {
   const id = 'extension-root'

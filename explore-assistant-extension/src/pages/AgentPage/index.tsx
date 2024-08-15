@@ -130,13 +130,14 @@ const AgentPage = () => {
 
   const isAgentReady =
     dimensions.length > 0 &&
-    measures.length > 0 &&
-    examples.exploreGenerationExamples.length > 0 &&
-    examples.exploreRefinementExamples.length > 0
+    measures.length > 0 
+    // &&
+    // examples.exploreGenerationExamples.length > 0 &&
+    // examples.exploreRefinementExamples.length > 0
 
   if (!isAgentReady) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen bg-chat">
         <div className="flex flex-col space-y-4 mx-auto max-w-2xl p-4">
           <h1 className="text-5xl font-bold">
             <span className="bg-clip-text text-transparent  bg-gradient-to-r from-pink-500 to-violet-500">
@@ -155,7 +156,7 @@ const AgentPage = () => {
   }
 
   return (
-    <div className="relative page-container flex h-screen">
+    <div className="relative page-container flex h-screen bg-chat">
       <Sidebar expanded={expanded} toggleDrawer={toggleDrawer} />
 
       <main
@@ -192,7 +193,7 @@ const AgentPage = () => {
                     : 'translate-x-full opacity-0',
                 )}
               >
-                <div className="flex flex-row bg-gray-400 text-white rounded-t-lg px-4 py-2 text-sm">
+                <div className="flex flex-row bg-prompt-secondary text-white rounded-t-lg px-4 py-2 text-sm">
                   <div className="flex-grow">Explore</div>
                   <div className="">
                     <Tooltip title="Close Explore" placement="bottom" arrow>
@@ -205,10 +206,10 @@ const AgentPage = () => {
                     </Tooltip>
                   </div>
                 </div>
-                <div className="bg-gray-200 border-l-2 border-r-2 border-gray-400 flex-grow">
+                <div className="bg-prompt-secondary border-l-2 border-r-2 border-prompt-secondary flex-grow">
                   <ExploreEmbed exploreParams={sidePanel.exploreParams} />
                 </div>
-                <div className="bg-gray-400 text-white px-4 py-2 text-sm rounded-b-lg"></div>
+                <div className="bg-prompt-secondary text-white px-4 py-2 text-sm rounded-b-lg"></div>
               </div>
             </div>
           ) : (

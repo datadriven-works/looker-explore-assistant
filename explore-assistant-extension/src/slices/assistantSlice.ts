@@ -80,6 +80,7 @@ export interface AssistantState {
   exploreId: string
   exploreName: string
   modelName: string
+  theme: string
   examples: {
     exploreGenerationExamples: {
       input: string
@@ -107,6 +108,7 @@ export const initialState: AssistantState = {
     isSidePanelOpen: false,
     exploreParams: {},
   },
+  theme: 'dark',
   history: [],
   dimensions: [],
   measures: [],
@@ -152,6 +154,9 @@ export const assistantSlice = createSlice({
       if (state.settings[id]) {
         state.settings[id].value = value;
       }
+    },
+    setTheme: (state, action: PayloadAction<string>) => {
+      state.theme = action.payload
     },
     openSidePanel: (state) => {
       state.sidePanel.isSidePanelOpen = true
@@ -234,6 +239,7 @@ export const {
   clearHistory,
   updateLastHistoryEntry,
   addPrompt,
+  setTheme,
   setHistory,
   setDimensions,
   setMeasures,

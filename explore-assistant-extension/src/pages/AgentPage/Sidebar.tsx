@@ -70,7 +70,7 @@ const Sidebar = ({ expanded, toggleDrawer }: SidebarProps) => {
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 bg-[#f0f4f9] transition-all duration-300 ease-in-out flex flex-col ${
+      className={`fixed inset-y-0 left-0 bg-chat  transition-all duration-300 ease-in-out flex flex-col ${
         expanded ? 'w-80' : 'w-16'
       } shadow-md`}
     >
@@ -123,7 +123,7 @@ const Sidebar = ({ expanded, toggleDrawer }: SidebarProps) => {
         {isExpanded && (
           <div>
             <div className="mb-4 flex flex-row">
-              <div className="flex-grow font-semibold">Recent</div>
+              <div className="flex-grow font-semibold text-gray-900">Recent</div>
               {history.length > 0 && (
                 <div
                   className="px-4 text-xs text-gray-400 hover:underline cursor-pointer"
@@ -135,7 +135,7 @@ const Sidebar = ({ expanded, toggleDrawer }: SidebarProps) => {
             </div>
             <div className="flex flex-col space-y-4">
               {history.length == 0 && (
-                <div className="text-gray-400">No recent chats</div>
+                <div className="text-gray-700">No recent chats</div>
               )}
               {reverseHistory.map((item, index) => (
                 <Tooltip key={index} title={item.message} placement="right" arrow>
@@ -151,7 +151,7 @@ const Sidebar = ({ expanded, toggleDrawer }: SidebarProps) => {
                       />
                     </div>
                     <div className="line-clamp-1">
-                      <span className="ml-3">{item.message}</span>
+                      <span className="ml-3 text-gray-400">{item.message}</span>
                     </div>
                   </div>
                 </Tooltip>
