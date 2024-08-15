@@ -6,19 +6,19 @@ const SamplePrompts = () => {
   const dispatch = useDispatch()
   const categorizedPrompts = [
     {
-      category: 'Cohorting',
-      prompt: 'Count of Users by first purchase date',
+      category: 'Market Capitalization',
+      prompt: 'Top 10 Stock by Market Cap',
     },
     {
-      category: 'Audience Building',
+      category: 'Market Movers',
       prompt:
-        'Users who have purchased more than 100 dollars worth of Calvin Klein products and have purchased in the last 30 days',
+        'Companies with the most positive price changes in the last day',
     },
-    {
-      category: 'Period Comparison',
-      prompt:
-        'Total revenue by category this year compared to last year in a line chart with year pivoted',
-    },
+    // {
+    //   category: 'Company Insight',
+    //   prompt:
+    //     'Total revenue by category this year compared to last year in a line chart with year pivoted',
+    // },
   ]
 
   const handleSubmit = (prompt: string) => {
