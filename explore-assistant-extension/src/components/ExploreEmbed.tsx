@@ -30,44 +30,27 @@ import { LookerEmbedSDK } from '@looker/embed-sdk'
 import { ExtensionContext } from '@looker/extension-sdk-react'
 import { useSelector } from 'react-redux'
 import { RootState } from '../store'
+import { ExploreHelper } from '../utils/ExploreHelper'
+import { ExploreParams } from '../slices/assistantSlice'
 
 export interface ExploreEmbedProps {
-  exploreUrl: string
+  modelName: string | null | undefined
+  exploreId: string | null | undefined
+  exploreParams: ExploreParams
 }
 
-const processUrlParams = (exploreUrl: string): { [key: string]: string } => {
-  const paramsObj: { [key: string]: string } = {};
+export const ExploreEmbed = ({
+  modelName,
+  exploreId,
+  exploreParams,
+}: ExploreEmbedProps) => {
+  if (!modelName || !exploreId || !exploreParams) {
+    return <></>
+  }
 
-  exploreUrl.split('&').forEach(param => {
-    let decodedKey;
-    let decodedValue;
-    try {
-      const [key, ...rest] = param.split('=');
-      decodedKey = decodeURIComponent(key);
-      decodedValue = decodeURIComponent(rest.join('=')).replace(/\+/g, ' ');
-    } catch (e) {
-      console.error('Error decoding URL parameter segment:', param);
-      return;
-    }
-
-    // Handle JSON objects directly as strings
-    if ((decodedValue.startsWith('{') && decodedValue.endsWith('}')) || 
-        (decodedValue.startsWith('[') && decodedValue.endsWith(']'))) {
-      paramsObj[decodedKey] = decodedValue;
-    } else {
-      paramsObj[decodedKey] = decodedValue;
-    }
-  });
-
-  return paramsObj;
-};
-
-
-export const ExploreEmbed = ({ exploreUrl }: ExploreEmbedProps) => {
   const { extensionSDK } = useContext(ExtensionContext)
   const [exploreRunStart, setExploreRunStart] = React.useState(false)
-
-  const { exploreId } = useSelector((state: RootState) => state.assistant)
+  const { settings } = useSelector((state: RootState) => state.assistant)
 
   const canceller = (event: any) => {
     return { cancel: !event.modal }
@@ -88,8 +71,8 @@ export const ExploreEmbed = ({ exploreUrl }: ExploreEmbedProps) => {
   useEffect(() => {
     const hostUrl = extensionSDK?.lookerHostData?.hostUrl
     const el = ref.current
-    if (el && hostUrl && exploreUrl) {
-      const baseParamsObj: { [key: string]: string } = {
+    if (el && hostUrl && exploreParams) {
+      const paramsObj: any = {
         // For Looker Original use window.origin for Looker Core use hostUrl
         embed_domain: hostUrl, //window.origin, //hostUrl,
         sdk: '2',
@@ -97,18 +80,23 @@ export const ExploreEmbed = ({ exploreUrl }: ExploreEmbedProps) => {
           key_color: '#174ea6',
           background_color: '#f4f6fa',
         }),
+        toggle: 'pik,vis,dat',
       }
 
-      const decodedParams = processUrlParams(exploreUrl);
+      if (settings['show_explore_data'].value) {
+        paramsObj['toggle'] = 'pik,vis'
+      }
 
-      const paramsObj: { [key: string]: string } = {
-        ...baseParamsObj,
-        ...decodedParams,
-      };
+      const encodedParams = ExploreHelper.encodeExploreParams(exploreParams)
+      for (const key in encodedParams) {
+        paramsObj[key] = encodedParams[key]
+      }
+
+      console.log('Explore Embed - Params', paramsObj)
 
       el.innerHTML = ''
       LookerEmbedSDK.init(hostUrl)
-      LookerEmbedSDK.createExploreWithId(exploreId)
+      LookerEmbedSDK.createExploreWithId(modelName + '/' + exploreId)
         .appendTo(el)
         .withClassName('looker-embed')
         .withParams(paramsObj)
@@ -130,7 +118,11 @@ export const ExploreEmbed = ({ exploreUrl }: ExploreEmbedProps) => {
         })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exploreUrl])
+  }, [exploreParams])
+
+  if (!exploreParams || Object.keys(exploreParams).length === 0) {
+    return <></>
+  }
 
   return (
     <>

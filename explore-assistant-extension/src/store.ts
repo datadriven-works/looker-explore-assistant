@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore, Reducer } from '@reduxjs/toolkit'
 import { persistStore, persistReducer, createTransform } from 'redux-persist'
 import storage from 'redux-persist/lib/storage' // defaults to localStorage for web
 import { combineReducers } from 'redux'
@@ -8,11 +8,15 @@ import assistantReducer, {
   Settings,
 } from './slices/assistantSlice'
 
+
 // Define keys that should never be persisted
 const neverPersistKeys: (keyof AssistantState)[] = [
-  'dimensions',
-  'measures',
+  'semanticModels',
   'examples',
+  'isBigQueryMetadataLoaded',
+  'isSemanticModelLoaded',
+  'currentExploreThread',
+  'isChatMode',
 ]
 
 // Create a transform function to filter out specific keys
@@ -33,6 +37,8 @@ const filterTransform = createTransform(
           persistedSettings[settingKey] = newState.settings[settingKey]
         }
       })
+
+      newState.settings = persistedSettings as Settings
 
       return newState
     }
@@ -57,15 +63,23 @@ const filterTransform = createTransform(
 )
 
 const persistConfig = {
-  key: 'root',
+  key: 'explore-assistant-state',
+  version: 1,
   storage,
-  whitelist: ['assistant'], // only assistant will be persisted
+  whitelist: ['assistant'],
   transforms: [filterTransform],
 }
 
-const rootReducer = combineReducers({
-  assistant: assistantReducer,
-})
+const rootReducer: Reducer<{
+  assistant: AssistantState;
+}> = (state, action) => {
+  if (state === undefined) {
+    return { assistant: initialState }
+  }
+  return combineReducers({
+    assistant: assistantReducer,
+  })(state, action)
+}
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
 
