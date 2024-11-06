@@ -100,3 +100,7 @@ This Python script is designed to manage data uploads from a JSON file into a Go
 
 6. **Error Handling**:
    - Throughout the data deletion and insertion processes, the script checks for and reports any errors that occur. This is vital for debugging and ensuring data integrity.
+
+### Add examples directly to the extension bundle
+
+If examples need to be added directly to the extension bundle, leave out the connection parameter blank in the `.env` file. This will be check at build time and both example files in this directory will be added to the extension bundle.
