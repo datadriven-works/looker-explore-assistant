@@ -279,17 +279,19 @@ ${
     async (prompt: string, dimensions: any[], measures: any[]) => {
       // get the filters
       const filterContents = `
-  
+     looker_fliter_expression_documentation:
+     """
      ${looker_filter_doc}
-     
-     # LookML Definitions
-     
+     """
+     # LookML Definitions For User:
+     """
      Below is a table of dimensions and measures that can be used to determine what the filters should be. Pay attention to the dimension type when translating the filters.
      
      | Field Id | Field Type | LookML Type | Label | Description | Tags |
      |------------|------------|-------------|-------|-------------|------|
      ${dimensions.map(formatRow).join('\n')}
      ${measures.map(formatRow).join('\n')}
+     """
      
      # Instructions
      
@@ -302,8 +304,8 @@ ${
      
      Your job is to follow the steps below and generate a JSON object.
      
-     * Step 1: Your task is the look at the following data question that the user is asking and determine the filter expression for it. You should return a JSON list of filters to apply. Each element in the list will be a pair of the field id and the filter expression. Your output will look like \`[ { "field_id": "example_view.created_date", "filter_expression": "this year" } ]\`
-     * Step 2: verify that you're only using valid expressions for the filter values. If you do not know what the valid expressions are, refer to the table above. If you are still unsure, don't use the filter.
+     * Step 1: Your task is the look at the following data question that the user is asking and determine the Looker filter expression for the user request. You should return a JSON list of filters to apply. Each element in the list will be a pair of the field id and the looker filter expression. Your output will look like \`[ { "field_id": "example_view.created_date", "filter_expression": "this year" } ]\`
+     * Step 2: verify that you're only using valid Looker expressions for the filter values. If you do not know what the valid Looker expressions are, refer to the table above. If you are still unsure, don't use the filter.
      * Step 3: verify that the field ids are indeed Field Ids from the table. If they are not, you should return an empty dictionary. There should be a period in the field id.
      `
       console.log(filterContents)
