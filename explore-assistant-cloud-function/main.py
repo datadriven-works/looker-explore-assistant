@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.INFO)
 project = os.environ.get("PROJECT")
 location = os.environ.get("REGION")
 vertex_cf_auth_token = os.environ.get("VERTEX_CF_AUTH_TOKEN")
-model_name = os.environ.get("MODEL_NAME", "gemini-1.0-pro-001")
+model_name = os.environ.get("MODEL_NAME", "gemini-1.5-pro")
 
 vertexai.init(project=project, location=location)
 
@@ -63,7 +63,7 @@ def has_valid_signature(request):
 
     return hmac.compare_digest(signature, expected_signature)
 
-def generate_looker_query(contents, parameters=None, model_name="gemini-1.5-flash"):
+def generate_looker_query(contents, parameters=None, model_name="gemini-1.5-pro"):
 
    # Define default parameters
     default_parameters = {
