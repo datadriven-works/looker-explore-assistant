@@ -164,6 +164,9 @@ const AgentPage = () => {
     )
 
     if (isSummary) {
+      
+      dispatch(setSidePanelExploreParams(newExploreParams))
+      dispatch(openSidePanel())
       dispatch(
         addMessage({
           exploreParams: newExploreParams,
@@ -174,6 +177,7 @@ const AgentPage = () => {
           type: 'summarize',
         }),
       )
+      
     } else {
       dispatch(setSidePanelExploreParams(newExploreParams))
       dispatch(openSidePanel())

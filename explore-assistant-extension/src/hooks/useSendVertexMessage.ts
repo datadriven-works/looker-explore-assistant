@@ -15,21 +15,54 @@ import { BigQueryHelper } from '../utils/BigQueryHelper'
 import { ExploreParams } from '../slices/assistantSlice'
 import { ExploreFilterValidator, FieldType } from '../utils/ExploreFilterHelper'
 
-const parseJSONResponse = (jsonString: string | null | undefined) => {
-  if(!jsonString) {
-    return ''
+
+
+const parseJSONResponse = (jsonString: string | null | undefined): any => {
+  if (!jsonString) {
+    return null;
   }
-  
+
+  // Remove markdown code block delimiters if present
   if (jsonString.startsWith('```json') && jsonString.endsWith('```')) {
-    jsonString = jsonString.slice(7, -3).trim()
+    jsonString = jsonString.slice(7, -3).trim();
   }
 
   try {
-    return JSON.parse(jsonString)
+    let parsed = JSON.parse(jsonString);
+    // Function to recursively parse any stringified JSON within the object
+    const recursiveParse = (obj: any): any => {
+      if (typeof obj === 'string') {
+        try {
+          // Attempt to parse the string
+          const parsedInner = JSON.parse(obj);
+          // If successful, recursively parse the result
+          return recursiveParse(parsedInner);
+        } catch {
+          // If parsing fails, return the string as is
+          return obj;
+        }
+      } else if (Array.isArray(obj)) {
+        return obj.map(item => recursiveParse(item));
+      } else if (typeof obj === 'object' && obj !== null) {
+        const newObj: any = {};
+        for (const key in obj) {
+          newObj[key] = recursiveParse(obj[key]);
+        }
+        return newObj;
+      }
+      // Return the value if it's neither string, array, nor object
+      return obj;
+    };
+
+    return recursiveParse(parsed);
+    
   } catch (error) {
-    return jsonString
+    // If the entire string isn't valid JSON, return it as is
+    console.log("error catch for parseJSONResponse: ",error)
+    return jsonString;
   }
-}
+};
+
 
 function formatRow(field: {
   name?: string
@@ -279,7 +312,7 @@ ${
     async (prompt: string, dimensions: any[], measures: any[]) => {
       // get the filters
       const filterContents = `
-     looker_fliter_expression_documentation:
+     looker_filter_expression_documentation:
      """
      ${looker_filter_doc}
      """
@@ -310,7 +343,6 @@ ${
      `
       console.log(filterContents)
       const filterResponseInitial = await sendMessage(filterContents, {})
-
       // check the response
       const filterContentsCheck =
         filterContents +
@@ -322,7 +354,7 @@ ${
      
            # Instructions
      
-           Verify the output, make changes and return the JSON
+           Verify the output, make changes, UNDER NO CIRCUNBSTANCES break the rules from looker_filter_expression_documentation, and return the JSON
      
            `
       const filterResponseCheck = await sendMessage(filterContentsCheck, {})
@@ -415,7 +447,7 @@ ${
 
     `
     const parameters = {
-      max_output_tokens: 1000,
+      max_output_tokens: 2000,
     }
     const response = await sendMessage(contents, parameters)
     return parseJSONResponse(response)
@@ -519,12 +551,13 @@ ${
       `
 
       const parameters = {
-        max_output_tokens: 1000,
+        max_output_tokens: 8192,
+        response_mime_type: "application/json",
+        "response_schema": {"type":"OBJECT","properties":{"response":{"type":"STRING"}}},
+        
       }
-      console.log(contents)
       const response = await sendMessage(contents, parameters)
       const responseJSON = parseJSONResponse(response)
-
       return responseJSON
     },
     [currentExplore],
@@ -546,18 +579,17 @@ ${
         generateFilterParams(prompt, dimensions, measures),
         generateBaseExploreParams(prompt, dimensions, measures, exploreGenerationExamples),
       ])
-
+      
       responseJSON['filters'] = filterResponseJSON
-      console.log(responseJSON)
+      responseJSON['filter_config'] = filterResponseJSON
 
-      // get the visualizations
+      // // get the visualizations
       const visualizationResponseJSON = await generateVisualizationParams(
         responseJSON,
         prompt,
       )
-      console.log(visualizationResponseJSON)
 
-      //responseJSON['vis_config'] = visualizationResponseJSON
+      responseJSON['vis_config'] = visualizationResponseJSON
 
       return responseJSON
     },
@@ -592,13 +624,11 @@ ${
       if (response.startsWith('```json') && response.endsWith('```')) {
         response = response.slice(7, -3).trim()
       }
-
       return response
     } catch (error) {
+      console.error(error)
       showBoundary(error)
-      return
     }
-
     return ''
   }
 
